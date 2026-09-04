@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#040412">
+
+<!-- GitHub Pages cannot set response headers, so the policy ships as a meta.
+
+     THE SHIPPED PAGE REFERENCES NO EXTERNAL ORIGIN AT ALL — no CDN, no Google
+     Fonts, no tag manager — which is why every directive here is 'self' or
+     'none', and why the default campaign makes zero third-party requests.
+
+     style-src carries 'unsafe-inline' for two real reasons, not laziness: the
+     noscript block at the end of this head is an inline style, and the shell
+     sets style attributes on elements it injects. Without it those break
+     SILENTLY — a CSP refusal appears in the console and nowhere else.
+
+     form-action is deliberately absent. It does NOT fall back to default-src,
+     so the form stays free to POST wherever IT wires campaign.js form.endpoint.
+     Adding it here would break that wiring on the day it happens.
+     frame-ancestors is absent because browsers ignore it in a meta policy;
+     writing it would only look like protection.
+
+     ┌─ IF YOU SET analytics.gtmId OR analytics.metaPixelId IN campaign.js ─┐
+     │ comment out the meta below and uncomment the one after it. This is  │
+     │ the one campaign edit that cannot live in campaign.js: a meta policy │
+     │ cannot be written from JavaScript.                                   │
+     └──────────────────────────────────────────────────────────────────────┘ -->
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; base-uri 'none'; object-src 'none'">
+
+<!-- Analytics build. Add your own API origin to connect-src when IT gives you
+     form.endpoint.
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://connect.facebook.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.google-analytics.com https://www.facebook.com; font-src 'self'; connect-src 'self' https://www.google-analytics.com; base-uri 'none'; object-src 'none'">
+-->
+
+<meta name="referrer" content="strict-origin-when-cross-origin">
+
+<!-- Static, because a crawler and a link preview read the head before any
+     script runs. The <title> is also re-rendered per language by js/i18n.js
+     via data-i18n; this is the default-locale copy it starts from. -->
+<title data-i18n="title">Top Win</title>
+<meta name="description" content="">
+
+<link rel="icon" href="assets/img/logo-topwin.svg" type="image/svg+xml">
+
+<!-- Fonts are discovered late: a face is only requested once a stylesheet has
+     been applied to text. Named here, they start with the stylesheets instead.
+
+     Two subsets, not one, and not because the default language is Ukrainian:
+     the first paint genuinely draws both scripts. The copy is Cyrillic; the
+     offer figures, the tab labels ("EMAIL") and the apostrophe in Заб’єш are
+     latin, and the Cyrillic range stops short of the apostrophe. The other six
+     woff2 — latin-ext, the italic cuts and the two hryvnia glyphs — stay
+     deferred: they belong to the dialog, which is closed at load. -->
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/roboto-cyrillic.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/roboto-latin.woff2" crossorigin>
+
+<!-- Order matters: reset, then tokens, then the shell, then the campaign.
+     css/stage.css is OPTIONAL — uncomment it for a full-screen page that never
+     scrolls. Leave it out for an ordinary scrolling landing page. See the top
+     of that file. -->
+<link rel="stylesheet" href="css/reset.css">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/shell.css">
+<link rel="stylesheet" href="css/form.css">
+<!-- <link rel="stylesheet" href="css/stage.css"> -->
+<link rel="stylesheet" href="campaign/main.css">
+
+<noscript><style>
+  /* The chrome and the dialog are injected by js/shell.js, so with scripting
+     off there is no header, no footer and no form. Say so rather than showing
+     a blank page — this is the honest floor, not a fallback experience. */
+  .tw-noscript {
+    margin: 0 auto;
+    padding: 48px 24px;
+    max-width: 40rem;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 18px;
+    line-height: 1.5;
+    text-align: center;
+  }
+</style></noscript>
+</head>
+<body>
+
+<!-- ═══ the shell ═══════════════════════════════════════════════
+     js/shell.js replaces these two markers with the header and the footer,
+     and appends the registration <dialog> to <body>. Do not put markup inside
+     them and do not rename the attributes: tools/smoke.py asserts that both
+     bars mounted and have a real box.
+
+     Under css/stage.css these are two of exactly three body children, and any
+     fourth becomes a fourth flex row. -->
+
+<div data-tw="header"></div>
+
+<!-- ═══ the campaign ════════════════════════════════════════════
+     THIS IS THE PART YOU REPLACE. Everything inside <main> belongs to
+     campaign/main.js and campaign/main.css.
+
+     Static markup here is the page's first paint and its largest contentful
+     element, so put the hero in the HTML rather than building it from script.
+     Strings carry data-i18n="key" and are rendered from the campaign `strings`
+     table in campaign.js; the text written inline is the default locale's, so
+     the right words paint before any script runs. -->
+
+<main id="tw-main">
+  <section class="cmp-demo">
+    <p class="cmp-demo__lead" data-i18n="demo.lead">Демо-механіка.</p>
+    <button class="cmp-demo__cta" type="button" data-i18n="demo.cta">ОТРИМАТИ БОНУС</button>
+  </section>
+</main>
+
+<div data-tw="footer"></div>
+
+<noscript>
+  <p class="tw-noscript">Для роботи сторінки потрібен JavaScript.<br>
+     This page needs JavaScript.</p>
+</noscript>
+
+<!-- ═══ scripts ═════════════════════════════════════════════════
+     `defer` keeps source order and runs everything before DOMContentLoaded,
+     which is the whole reason there is no bundler here: the order below IS the
+     dependency graph.
+
+       campaign.js       the config every other file reads
+       js/strings.js     the shell's copy and the locale table
+       js/i18n.js        the translation engine, reads both of the above
+       js/form.js        the dialog's behaviour
+       js/shell.js       builds the chrome and the dialog, then boots i18n
+       campaign/main.js  the mechanic, which only sees TW.ready()
+
+     A campaign adds its own <script defer> AFTER campaign/main.js. -->
+<script defer src="campaign.js"></script>
+<script defer src="js/strings.js"></script>
+<script defer src="js/i18n.js"></script>
+<script defer src="js/form.js"></script>
+<script defer src="js/shell.js"></script>
+<script defer src="campaign/main.js"></script>
+
+</body>
+</html>

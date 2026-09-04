@@ -1,0 +1,110 @@
+/* ═══════════════════════════════════════════════════════════════
+   THE CAMPAIGN'S STYLESHEET
+
+   Replace everything below. This file and campaign/main.js are the mechanic;
+   nothing else in the repo is.
+
+   What ships here is the demo: a line of copy and a button that opens the
+   registration dialog, so there is something working to replace rather than
+   an empty file.
+
+   ── The rules that still apply to you ────────────────────────
+   1. NO HEX LITERALS, no rgb()/rgba(), and no --orange-N / --navy-N. Ask for
+      the semantic tokens in css/tokens.css: --accent, --accent-on-light,
+      --surface, --text, --text-muted, --danger, --r-md, --ease-out, --font.
+      `python tools/tokens.py --check` fails the build on any of them, and it
+      exists because two landings ago three stylesheets each invented their
+      own "same" green.
+
+   2. Prefix your classes `cmp-`. The shell owns `tw-`.
+
+   3. Small text obeys the AA table: never #00a75c or #ff4500 on white for
+      body copy — use --green-on-light and --accent-on-light. The 500s stay
+      hero colours for large type and filled shapes.
+
+   4. Any input you add is at least 16px, or iOS Safari zooms the page on
+      focus.
+
+   ── Choosing a layout ────────────────────────────────────────
+   Three modes; the shell supports all three and assumes none.
+
+   A. SCROLLING PAGE — the default. Do nothing. The header, your <main> and
+      the footer are ordinary blocks. Add `position: sticky; top: 0` to
+      .tw-hdr here if you want the bar to follow.
+
+   B. FIXED STAGE, NEVER SCROLLS — uncomment the css/stage.css <link> in
+      index.html. body becomes a flex column, the two bars keep their height
+      and #tw-main takes the rest. Size things against the stage container
+      (cqh/cqw) INSIDE your own elements; the shell stays px.
+
+   C. ARTBOARD UNIT — for a hero that is a pixel-exact Figma comp. Define
+      the unit here and multiply Figma's own numbers by it:
+
+        #tw-main {
+          --u: min(calc(100vw / 375), calc(100svh / 666));
+        }
+        @media (min-width: 900px) {
+          #tw-main { --u: min(calc(100vw / 1920), calc(100svh / 1080)); }
+        }
+        .cmp-thing { width: calc(240 * var(--u)); }
+
+      Use it only for the mechanic. Text the visitor reads stays in real px:
+      viewport units break browser zoom.
+   ═══════════════════════════════════════════════════════════════ */
+
+
+/* ══ demo mechanic — delete all of this ═══════════════════════ */
+
+/* The sticky-footer pattern for mode A: the page is at least the viewport
+   tall, and #tw-main takes whatever the two bars leave. Delete it if your
+   campaign is taller than the screen anyway, and delete the whole block if
+   you switch to css/stage.css, which does this and more. */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--surface);
+}
+
+#tw-main { flex: 1 0 auto; display: flex; }
+
+.cmp-demo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.cmp-demo__lead {
+  max-width: 24rem;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 20px;
+  font-weight: var(--fw-medium);
+  line-height: 1.35;
+}
+
+.cmp-demo__cta {
+  min-height: 56px;
+  padding: 0 32px;
+  border-radius: var(--r-md);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font);
+  font-size: 18px;
+  font-weight: var(--fw-black);
+  letter-spacing: .02em;
+  box-shadow: var(--glow-accent);
+  transition: scale 140ms var(--ease-out), background-color 140ms var(--ease-out);
+}
+
+.cmp-demo__cta:active { scale: .97; background: var(--accent-press); }
+
+.cmp-demo__cta:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+}

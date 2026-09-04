@@ -1,0 +1,6 @@
+Campaign-only art lives here: sprites, hero images, audio, anything the
+mechanic draws. Brand assets — the logo, the payment marks, the flags, the
+fonts — stay in assets/ and are shared.
+
+Put unoptimised exports in raw/img/ (gitignored) and run
+`python tools/optimize.py` to produce what ships.
