@@ -341,6 +341,16 @@
       input.addEventListener('blur', function () { grade(name); });
     });
 
+    /* The field accepts the number in three shapes and the validator
+       normalises all three, but the box still showed what was typed -- so a
+       visitor who pasted 380931234567 read "+380 380931234567" and could not
+       tell whether it had been understood. Written back on blur, once the
+       number is complete, so nothing is rewritten mid-typing. */
+    $('#tw-phone').addEventListener('blur', function () {
+      var digits = phoneDigits();
+      if (digits.length === PHONE_DIGITS) this.value = digits;
+    });
+
     var eye = $('.tw-eye');
     eye.addEventListener('click', function () {
       var input = $('#tw-password');
