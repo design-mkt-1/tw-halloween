@@ -277,8 +277,9 @@
   --font-stretch-tight: 75%;
 
   /* ── Motion ─────────────────────────────────────── */
-  /* The curve already used by js/animator.js and the card in form.css,
-     given a name so new motion extends one system rather than forking. */
+  /* The one curve, used by the header controls, the language menu and the
+     dialog. New motion extends this set rather than forking a curve of its
+     own, which is the only reason it has a name. */
   --ease-out: cubic-bezier(.2, .9, .3, 1);
 
   /* ── Radii / elevation ────────────────────────────────────── */

@@ -9,8 +9,14 @@ of this script are committed. That is the whole build system.
     python tools/optimize.py hero.png           # just one
     python tools/optimize.py hero.png --widths 375,1280,1920
 
-For each source it writes assets/img/<name>-<width>.avif and .webp. A source
-with no --widths is written once at its own size, without a width suffix.
+For each source it writes campaign/assets/<name>-<width>.avif and .webp. A
+source with no --widths is written once at its own size, without a width
+suffix. Pass --out to write somewhere else.
+
+campaign/assets/ and not assets/img/, on purpose: assets/img/ holds the brand
+-- the logo, the payment marks, the flags, the icons -- and is identical in
+every campaign. Everything a campaign generates is its own and belongs in the
+slot that gets replaced.
 
 Why both formats: AVIF is roughly a fifth the size at the same quality, and
 WebP is the fallback for the browsers that do not have it. In the markup put
@@ -35,7 +41,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 ROOT = Path(__file__).resolve().parent.parent
 RAW = ROOT / "raw" / "img"
-OUT = ROOT / "assets" / "img"
+OUT = ROOT / "campaign" / "assets"
 
 # --navy-950, the page behind the stage. Alpha is flattened onto this so an
 # edge never shows a grey or a white halo.
@@ -103,9 +109,14 @@ def main() -> int:
     ap.add_argument("names", nargs="*", help="file names inside raw/img/ (default: all)")
     ap.add_argument("--widths", default="", help="comma-separated output widths")
     ap.add_argument("--keep-alpha", action="store_true", help="do not flatten transparency")
+    ap.add_argument("--out", default="", help="output directory (default: campaign/assets)")
     args = ap.parse_args()
 
     Image = load()
+
+    global OUT
+    if args.out:
+        OUT = (ROOT / args.out).resolve()
 
     if not RAW.is_dir():
         print(f"optimize: {RAW.relative_to(ROOT).as_posix()} does not exist. "

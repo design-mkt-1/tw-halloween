@@ -194,6 +194,26 @@ nothing warns you.
 
 ---
 
+## Browser support
+
+Floor: **Chrome/Edge 105, Safari 16, Firefox 110.** Full motion from
+**Chrome/Edge 117, Safari 17.4, Firefox 129.**
+
+| feature | where | below the floor |
+|---|---|---|
+| `<dialog>` + `showModal()` | `css/form.css`, `js/form.js` | the pop-up does not open — hard fail |
+| `container: … / size` | `css/stage.css` **only** | the landscape footer-drop never applies; the page still works |
+| `@starting-style`, `allow-discrete` | `css/form.css` | the dialog appears without its entry animation |
+| `backdrop-filter` | `css/shell.css`, `css/form.css` | the header bar is a flat colour |
+
+Only stage-mode campaigns carry the container query, so a scrolling campaign
+runs down to Safari 15.4.
+
+Nobody has run this on a browser at the floor. The numbers are read off the
+features, not off a device.
+
+---
+
 ## For agents
 
 `.claude/skills/topwin-lp/` travels with every clone. It carries the decisions

@@ -46,8 +46,9 @@
    tokens.css, not a literal here. The exact values are in the report that
    came with this file and in raw/, never in a stylesheet.
 
-   Three tokens this file asks for do not exist yet and are named, not
-   inlined: --scrim, --shadow-card and --shadow-cta. See the note at each. */
+   Three of the values this file needs -- --scrim, --shadow-card and
+   --shadow-cta -- are shadows, and a shadow is a colour: they are named in
+   css/tokens.css rather than written here. See the note at each. */
 
 
 /* ══ the dialog ═══════════════════════════════════════════════
@@ -114,11 +115,10 @@
    arrives. One property, and it is the whole difference between a modal
    appearing and a modal being presented.
 
-   --scrim IS NOT IN tokens.css YET. The design's overlay is a near-black
-   navy at 72%. --chrome-bar carries the same alpha and is within three points
-   of the same colour, but it is named for the header bar, and pointing the
-   dialog at it would be the fourth orange all over again. It wants its own
-   name. Until it has one this rule paints nothing -- deliberately loud. */
+   --scrim is --navy-950 at 72%. --chrome-bar carries the same alpha and is
+   within three points of the same colour, and the dialog is deliberately NOT
+   pointed at it: the header bar and the scrim are two surfaces, and naming one
+   after the other is how a value stops tracking the thing it belongs to. */
 .tw-dialog::backdrop {
   background: var(--scrim);
   backdrop-filter: blur(10px) saturate(115%);
@@ -197,9 +197,9 @@
   padding: 24px;
   border-radius: var(--r-xl);
   background: var(--white);
-  /* --shadow-card IS NOT IN tokens.css YET. The design's is a 12/12 drop of
-     Midnight Navy at 8% -- a real shadow under the card, not the
-     --glow-second halo, which is a different thing for a different surface. */
+  /* --shadow-card is a 12/12 drop of Midnight Navy at 8% -- a real shadow
+     under the card, not the --glow-second halo, which is a different thing for
+     a different surface. */
   box-shadow: var(--shadow-card), inset 0 0 0 1px var(--stroke);
   font-family: var(--font);
 }
@@ -586,9 +586,8 @@
   border: 0;
   border-radius: 10px;
   background: var(--accent);
-  /* --shadow-cta IS NOT IN tokens.css YET. The design's is a 4/6 drop of
-     Orange Fire at 19% under the button. --glow-accent is a 24px halo for
-     the dark stage and is not this. */
+  /* --shadow-cta is a 4/6 drop of Orange Fire at 19% under the button.
+     --glow-accent is a 24px halo for the dark stage and is not this. */
   box-shadow: var(--shadow-cta);
   color: var(--accent-ink);
   font-family: inherit;

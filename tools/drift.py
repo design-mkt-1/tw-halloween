@@ -53,6 +53,10 @@ SHARED = [
     ".github/workflows/pages.yml",
 ]
 
+# tools/optimize.py is deliberately NOT in that list. The four guards define
+# what "correct" means and must be identical everywhere; the asset converter is
+# a convenience, and a campaign with unusual art is expected to extend it.
+
 
 def digest(path: Path) -> str:
     # Newline-normalised, so a clone checked out with CRLF is not reported as
