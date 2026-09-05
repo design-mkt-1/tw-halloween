@@ -6,6 +6,14 @@ here and a bump to `TEMPLATE-REV` in
 just code, also edits `references/decisions.md` in the same commit — same
 repo, same commit, same review, so the two cannot drift apart.
 
+## v1.0.1
+
+- `css/reset.css` — `ul, ol { list-style: none }`. The reset removed the
+  indent and left the marker, and `css/shell.css` had quietly set this on its
+  own two lists, so the gap only ever showed up in a campaign: the flip-cards
+  retrofit drew nine cards on a grid with a white dot beside each of them.
+  Found while porting that landing onto the template.
+
 ## v1.0.0
 
 First version. Built from `tw-penalty` and `tw-flip-cards-lp`, taking the
