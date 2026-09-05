@@ -150,6 +150,22 @@ window.TW_CAMPAIGN = {
     payments:   ['visa', 'mastercard', 'tether', 'bitcoin']
   },
   header: { show: true, mute: false, lang: true },
+
+  /* ── Sound ────────────────────────────────────────────────────
+     name -> file, and empty is the shipped default: no Audio element is made,
+     and the header renders no speaker even if header.mute above is true.
+
+     The mechanic plays a clip with TW.sound('name', 0.9). js/audio.js owns the
+     rest -- nothing loads until the visitor's first gesture, the mute state
+     persists, and a file that fails to load simply never plays.
+
+       sounds: {
+         flip: 'campaign/assets/audio/flip.mp3',
+         win:  'campaign/assets/audio/win.mp3'
+       }
+
+     Set header.mute to true alongside this, or the visitor cannot turn it off. */
+  sounds: {},
   footer: { show: true },
 
   /* ── Campaign copy, per locale ────────────────────────────────

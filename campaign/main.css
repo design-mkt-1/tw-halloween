@@ -37,6 +37,11 @@
       and #tw-main takes the rest. Size things against the stage container
       (cqh/cqw) INSIDE your own elements; the shell stays px.
 
+   B2. THE FOLD — uncomment css/fold.css instead. #tw-main is a definite box,
+      92svh minus the header, the page scrolls and the footer starts below the
+      fold with only its top edge showing. Same cqh/cqw container (tw-main) as
+      mode B. Link one of the two, never both.
+
    C. ARTBOARD UNIT — for a hero that is a pixel-exact Figma comp. Define
       the unit here and multiply Figma's own numbers by it:
 

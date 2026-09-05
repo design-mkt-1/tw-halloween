@@ -6,6 +6,24 @@ here and a bump to `TEMPLATE-REV` in
 just code, also edits `references/decisions.md` in the same commit — same
 repo, same commit, same review, so the two cannot drift apart.
 
+## v1.0.2
+
+- `css/shell.css` — the bar is 52px, and 64px above 700px, down from 56 and 74;
+  the logo 22px and 28px, down from 24 and 34. The 44px controls are untouched:
+  the tap target was not what was too big. The height is now `--tw-hdr-h`,
+  declared beside the bar, because `css/fold.css` subtracts it.
+- `css/fold.css` — NEW, and shared. The third page shape: `#tw-main` is a
+  definite box of `92svh` minus the header, the page scrolls, and the footer
+  starts below the fold with only its top edge showing. A campaign links this
+  or `css/stage.css`, never both.
+- `js/audio.js` — NEW, and shared. The sound pool `tw-penalty` carried in its
+  own campaign folder: nothing loads until the visitor's first gesture, the
+  mute state persists through a `try`, a clip that fails to load never plays.
+  `js/shell.js` wires the speaker it already drew and exposes `TW.sound(name,
+  volume)` and `TW.muted()`; `campaign.js § sounds` is the map, empty by
+  default, and an empty map means no speaker at all.
+- `tools/drift.py` — the `SHARED` list gains both new files: 16 entries.
+
 ## v1.0.1
 
 - `css/reset.css` — `ul, ol { list-style: none }`. The reset removed the

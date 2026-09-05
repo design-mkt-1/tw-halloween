@@ -59,14 +59,20 @@
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/roboto-latin.woff2" crossorigin>
 
 <!-- Order matters: reset, then tokens, then the shell, then the campaign.
-     css/stage.css is OPTIONAL — uncomment it for a full-screen page that never
-     scrolls. Leave it out for an ordinary scrolling landing page. See the top
-     of that file. -->
+
+     The page shape is the next line, and it is one of three:
+       neither link   an ordinary scrolling page. The default.
+       css/stage.css  a fixed full-screen stage. Nothing ever scrolls.
+       css/fold.css   the mechanic gets 92% of the screen, the page scrolls,
+                      and the footer starts below the fold.
+     Link AT MOST ONE of the two: they answer the same question, and whichever
+     loaded second would win. Each file's own header says what it costs. -->
 <link rel="stylesheet" href="css/reset.css">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/shell.css">
 <link rel="stylesheet" href="css/form.css">
 <!-- <link rel="stylesheet" href="css/stage.css"> -->
+<!-- <link rel="stylesheet" href="css/fold.css"> -->
 <link rel="stylesheet" href="campaign/main.css">
 
 <noscript><style>
@@ -131,6 +137,8 @@
        js/strings.js     the shell's copy and the locale table
        js/i18n.js        the translation engine, reads both of the above
        js/form.js        the dialog's behaviour
+       js/audio.js       the sound pool; before the shell, which asks it
+                         whether there is anything to mute
        js/shell.js       builds the chrome and the dialog, then boots i18n
        campaign/main.js  the mechanic, which only sees TW.ready()
 
@@ -139,6 +147,7 @@
 <script defer src="js/strings.js"></script>
 <script defer src="js/i18n.js"></script>
 <script defer src="js/form.js"></script>
+<script defer src="js/audio.js"></script>
 <script defer src="js/shell.js"></script>
 <script defer src="campaign/main.js"></script>
 
