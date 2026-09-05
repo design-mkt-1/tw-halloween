@@ -6,6 +6,17 @@ here and a bump to `TEMPLATE-REV` in
 just code, also edits `references/decisions.md` in the same commit — same
 repo, same commit, same review, so the two cannot drift apart.
 
+## v1.0.3
+
+- `.github/workflows/pages.yml` — the build deletes `campaign/smoke.py` and any
+  `__pycache__` from `_site` after the copy. `campaign/` is on the allowlist
+  because the mechanic lives there, and the campaign's own Playwright check
+  sits beside it: served on the live URL, that is the same mistake as
+  publishing `tools/`, arriving through a door that is meant to be open. Found
+  when a `.pyc` turned up in the preview build.
+- `tools/handoff.py` — the same two exclusions, and its closing assert now
+  fails on them too, so the archive IT receives cannot carry them either.
+
 ## v1.0.2
 
 - `css/shell.css` — the bar is 52px, and 64px above 700px, down from 56 and 74;
