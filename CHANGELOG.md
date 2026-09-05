@@ -13,6 +13,11 @@ repo, same commit, same review, so the two cannot drift apart.
   own two lists, so the gap only ever showed up in a campaign: the flip-cards
   retrofit drew nine cards on a grid with a white dot beside each of them.
   Found while porting that landing onto the template.
+- `tools/handoff.py` — new, and not a shared file. Zips exactly what
+  `.github/workflows/pages.yml` stages, by reading that workflow's own
+  `cp -r ... _site/` line rather than restating the list, and writes a
+  README-IT.md beside it: the five link seams, the form endpoint, the
+  passthrough parameters an affiliate click id rides on, and the browser floor.
 
 ## v1.0.0
 
