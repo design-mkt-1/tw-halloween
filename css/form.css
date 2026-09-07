@@ -268,14 +268,26 @@
 .tw-promo__pct   { font-size: 84px; color: var(--accent); }
 .tw-promo__sub   { font-size: 34px; color: var(--second); }
 
+/* The hero is whichever figure the campaign leads with -- a percent for a
+   sportsbook, an amount for a casino -- and the two are not the same width.
+   "225%" is four characters at 84px and fits the 248 a 320px phone leaves;
+   "250.000 ₴" is nine and does not. js/shell.js counts the rendered string
+   and adds this class above five non-space characters, after i18n has filled
+   the node and again on every language change.
+
+   The second step is 0.6 of the first at each breakpoint, which is the ratio
+   the casino landing arrived at independently when it drew its own card. */
+.tw-promo__pct--long { font-size: 50px; }
+
 /* Below the 360 the card is drawn at, the numerals stop fitting: a 320px
    phone leaves 296 of card and 248 of content, against the 312 the design's
    own figure assumes. Fixed steps rather than a fluid clamp, because these
    are the sizes a visitor reads and browser zoom has to move them. */
 @media (max-width: 359px) {
-  .tw-promo__title { font-size: 15px; }
-  .tw-promo__pct   { font-size: 68px; }
-  .tw-promo__sub   { font-size: 28px; }
+  .tw-promo__title     { font-size: 15px; }
+  .tw-promo__pct       { font-size: 68px; }
+  .tw-promo__pct--long { font-size: 42px; }
+  .tw-promo__sub       { font-size: 28px; }
 }
 
 
@@ -751,9 +763,10 @@
 
   .tw-promo { gap: 24px; }
   .tw-promo__logo  { width: 247px; height: 44px; }
-  .tw-promo__title { font-size: 24px; }
-  .tw-promo__pct   { font-size: 100px; }
-  .tw-promo__sub   { font-size: 44px; }
+  .tw-promo__title     { font-size: 24px; }
+  .tw-promo__pct       { font-size: 100px; }
+  .tw-promo__pct--long { font-size: 60px; }
+  .tw-promo__sub       { font-size: 44px; }
   /* The one gap the desktop node adds inside the head: 14 between the
      numerals and the amount, where mobile stacks them flush. */
   .tw-promo__offer { gap: 14px; }

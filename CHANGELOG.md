@@ -6,6 +6,22 @@ here and a bump to `TEMPLATE-REV` in
 just code, also edits `references/decisions.md` in the same commit — same
 repo, same commit, same review, so the two cannot drift apart.
 
+## v1.0.4
+
+- `js/shell.js` — the offer's hero figure is a campaign decision, not a
+  hard-coded percent. `dialogHTML()` reads `offer.hero` (`'percent'` or
+  `'amount'`, defaulting to the percent when there is one), gives that node
+  `.tw-promo__pct` and the rest `.tw-promo__sub`. New `fitHero()` counts the
+  rendered string after i18n and on every language change, and above five
+  non-space characters adds `.tw-promo__pct--long`.
+- `css/form.css` — `.tw-promo__pct--long`, 50/42/60px against the hero's
+  84/68/100. Found by putting the casino landing's offer on this card: it has
+  no percent, so it arrived with no large figure at all, and the only fix
+  available to a campaign was editing this file. The reasoning is in
+  `references/decisions.md § 7a`.
+- `campaign.js` — the `hero` key, and the note that an amount which leads wants
+  `promo.amount` overridden to the figure alone.
+
 ## v1.0.3
 
 - `.github/workflows/pages.yml` — the build deletes `campaign/smoke.py` and any

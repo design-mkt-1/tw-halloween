@@ -36,12 +36,25 @@ window.TW_CAMPAIGN = {
      any weight and a missing glyph still renders something. If you change
      currency, run `python tools/fonts.py --check`.
 
-     spins: '' hides the "+ N FS" line entirely. */
+     spins: '' hides the "+ N FS" line entirely.
+
+     hero: which figure is drawn large, in Orange Fire, with the rest under it.
+     'percent' or 'amount'; leave it out and the percent leads if there is one,
+     otherwise the amount. A sportsbook leads with 225%, a casino with
+     250.000 ₴ — same card, one key apart. Spins are never the hero.
+     The shell drops the hero to a smaller step above five characters, so a
+     long amount does not have to be shortened by hand.
+
+     If the amount leads, override `promo.amount` in `strings` below to the
+     figure alone — '{amount} {currency}'. The shipped wording is
+     'up to {amount} {currency}', which is a qualifier under a headline, not a
+     headline. */
   offer: {
     percent:  '225%',
     amount:   '15000',
     currency: 'UAH',
     spins:    '',
+    hero:     '',            // '' = percent if there is one, else amount
     code:     'DEMO225'      // what the platform is told; payload field `bonus`
   },
 

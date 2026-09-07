@@ -272,15 +272,30 @@
     var b = C.brand || {};
     var offer = C.offer || {};
 
+    /* One figure in the offer is the hero and the rest sit under it. Which one
+       is the campaign's to say: a sportsbook leads with 225%, a casino with
+       250.000 UAH. `offer.hero` names it; with nothing written the percent
+       leads if there is one, otherwise the amount, which is what every offer
+       before this one did implicitly. Spins are never the hero -- "+250 FS" is
+       the sweetener and reads as one. */
+    var hero = offer.hero ||
+               (offer.percent ? 'percent' : (offer.amount ? 'amount' : ''));
+
+    function figure(key, i18nKey) {
+      if (!offer[key]) return '';
+      var cls = key === hero ? 'tw-promo__pct' : 'tw-promo__sub';
+      return '<span class="' + cls + '" data-i18n="' + i18nKey + '"></span>';
+    }
+
     var promo =
       '<div class="tw-promo">' +
       '<img class="tw-promo__logo" src="' + esc(b.logo) + '" alt="' + esc(b.logoAlt || 'Top Win') + '">' +
       '<div class="tw-promo__head">' +
       '<p class="tw-promo__title" id="tw-promo-title" data-i18n="promo.title"></p>' +
       '<div class="tw-promo__offer">' +
-      (offer.percent ? '<span class="tw-promo__pct" data-i18n="promo.pct"></span>' : '') +
-      (offer.amount ? '<span class="tw-promo__sub" data-i18n="promo.amount"></span>' : '') +
-      (offer.spins ? '<span class="tw-promo__sub" data-i18n="promo.spins"></span>' : '') +
+      figure('percent', 'promo.pct') +
+      figure('amount', 'promo.amount') +
+      figure('spins', 'promo.spins') +
       '</div></div></div>';
 
     /* Five nodes, not one string with markup in it, so a locale can move the
@@ -372,6 +387,26 @@
     });
   }
 
+  /* ── the hero figure's size ───────────────────────────────── */
+
+  /* The hero has two size steps and which one it takes cannot be decided when
+     the markup is built: the text arrives from the string table afterwards,
+     and it changes again with the language. "225%" is four characters;
+     "250.000 ₴" is nine and does not fit the 84px step on a 320px phone.
+
+     Five non-space characters is the line. Every percent a campaign can write
+     falls under it, up to "1000%"; an amount with a currency never does.
+     Counted rather than measured: a text measurement here would run before
+     the italic condensed face has loaded and would answer for the fallback. */
+  var HERO_LONG = 5;
+
+  function fitHero() {
+    var el = document.querySelector('.tw-promo__pct');
+    if (!el) return;
+    var n = (el.textContent || '').replace(/\s/g, '').length;
+    el.classList.toggle('tw-promo__pct--long', n > HERO_LONG);
+  }
+
   /* ── boot ─────────────────────────────────────────────────── */
 
   function mountSlot(name, html, show) {
@@ -414,10 +449,13 @@
       TWI18n.init();
       TWI18n.onChange(function (code) {
         wireLinks(document);          // a locale can change nothing here, but a
-        track('lang_change', { to: code });  // campaign hook might
-        emit('lang', code);
+        fitHero();                    // "225%" and "ДО 15000 ГРН" are not the
+        track('lang_change', { to: code });  // same width; a campaign hook
+        emit('lang', code);           // might change either
       });
     }
+
+    fitHero();
 
     wireLinks(document);
     injectAnalytics();

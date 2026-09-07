@@ -250,6 +250,49 @@ keep their mobile sizes exactly. Only what the design changes is in the query.
 
 ---
 
+## 7a. Which figure in the offer is the hero
+
+**DECISION** `campaign.js § offer.hero` names it — `'percent'` or `'amount'`.
+Unset, the percent leads if there is one and otherwise the amount. The hero
+node is `.tw-promo__pct`, everything else in the offer is `.tw-promo__sub`, and
+spins are never the hero. `js/shell.js § fitHero()` counts the RENDERED string
+after i18n has filled it and adds `.tw-promo__pct--long` above five non-space
+characters: 84/68/100px becomes 50/42/60px.
+
+**WHY** The card is shared and only the offer changes, but the two landings
+this template comes from lead with different things: the sportsbook with
+`225%`, the casino with `250.000 ₴`. Before this, the shell hard-coded the
+percent as the hero, so a casino offer arrived with no large figure at all —
+and the only way to fix it in a campaign was to edit `css/form.css`, which is
+the exact drift `tools/drift.py` exists to refuse. One key in the campaign
+config is the difference between a card that fits the offer and a fork of the
+shared stylesheet.
+
+**WHY MEASURED, NOT DECLARED** The size cannot be chosen when the markup is
+built: the text arrives from the string table afterwards and changes again with
+the language. `225%` is four characters; `250.000 ₴` is nine and does not fit
+the 84px step in the 248px a 320px phone leaves. Counted rather than measured
+in pixels, because a measurement at that moment would run before the italic
+condensed face has loaded and would answer for the fallback.
+
+**CODE** `js/shell.js § dialogHTML() figure()` and `§ fitHero()`;
+`css/form.css § .tw-promo__pct--long`; `campaign.js § offer`.
+
+**REJECTED** `clamp()` on the hero. The file already refuses fluid type here:
+these are sizes a visitor reads, and browser zoom has to be able to move them.
+Two fixed steps keep that.
+
+Also rejected: letting the campaign set the size in `campaign/main.css`. It
+would work exactly once, and then the two campaigns' cards would differ by a
+number nobody could find — which is what this section exists to prevent.
+
+**FOLLOWS FROM THIS** If the amount is the hero, the campaign overrides
+`promo.amount` to `'{amount} {currency}'`. The shipped string is
+`'up to {amount} {currency}'`, which is a qualifier under a headline, not a
+headline.
+
+---
+
 ## 8. i18n
 
 **DECISION** One HTML file, all languages. Nodes opt in with `data-i18n="key"`,
