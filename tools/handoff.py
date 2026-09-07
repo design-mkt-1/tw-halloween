@@ -141,10 +141,19 @@ them: {repo}
 
 def campaign_value(key):
     """One value out of campaign.js, read as text. Good enough for a README and
-    deliberately not a JS parser."""
+    deliberately not a JS parser.
+
+    The trailing `// comment` is cut off first. Half the keys in campaign.js
+    carry one, and a campaign that adds a comment after `passthrough` would
+    otherwise hand IT a README with the comment inside the value -- which is
+    exactly what happened at tw-flip-cards-lp with `offer.code`.
+    """
     text = (ROOT / "campaign.js").read_text(encoding="utf-8")
     m = re.search(r"^\s*" + key + r":\s*(.+?),?\s*$", text, re.M)
-    return m.group(1).strip().strip("',\"") if m else ""
+    if not m:
+        return ""
+    value = re.sub(r"\s*//.*$", "", m.group(1)).strip()
+    return value.rstrip(",").strip("'\"")
 
 
 def main() -> int:
