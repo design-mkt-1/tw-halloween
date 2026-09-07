@@ -142,6 +142,11 @@ In `index.html`: the `<title>` fallback text, `<meta name="description">`, and
 in `<main>` should be the real words, so the right text paints before any
 script runs.
 
+Leave the icon line alone. `assets/img/favicon_topwin.svg` is the brand mark
+and ships on every Top Win landing — it is not the campaign's to change, and
+it is not `logo-topwin.svg`, which is 247×44 of horizontal type and unreadable
+at 16px.
+
 ---
 
 ## 8. The gate

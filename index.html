@@ -44,7 +44,13 @@
 <title data-i18n="title">Top Win</title>
 <meta name="description" content="">
 
-<link rel="icon" href="assets/img/logo-topwin.svg" type="image/svg+xml">
+<!-- The brand icon, and it ships on every Top Win landing. Not the wordmark
+     in assets/img/logo-topwin.svg: that one is 247x44 of horizontal type and
+     is illegible at 16px. This is the square mark drawn for the tab.
+     Without this line the browser asks for /favicon.ico, which no campaign
+     ships and the deploy allowlist would not publish anyway -- a 404 in the
+     console of every visit. -->
+<link rel="icon" href="assets/img/favicon_topwin.svg" type="image/svg+xml">
 
 <!-- Fonts are discovered late: a face is only requested once a stylesheet has
      been applied to text. Named here, they start with the stylesheets instead.

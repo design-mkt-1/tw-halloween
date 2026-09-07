@@ -100,6 +100,13 @@ A change one of these genuinely needs is made **in the template**, `SHARED.lock`
 is bumped there, and the clone pulls it down. Regenerating `SHARED.lock` in a
 clone silences the alarm instead of answering it.
 
+Two brand assets are not in that list only because a hash cannot say anything
+useful about an SVG, and are equally not a campaign's to change:
+`assets/img/logo-topwin.svg`, the wordmark inside the card, and
+`assets/img/favicon_topwin.svg`, the square mark in the browser tab. Every
+Top Win landing ships both, and they are not interchangeable — the wordmark is
+247×44 and unreadable at 16px.
+
 **Always edit** — this is the campaign:
 
 ```
