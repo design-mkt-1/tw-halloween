@@ -329,6 +329,34 @@ Adding a language is four edits and no new file. `?lang=` is deliberately not
 persisted: a link that forces a language should not overwrite what the visitor
 chose last visit. `\n` is a real line break; the markup carries no `<br>`.
 
+### 8a. One file, or one file per language
+
+**DECISION** `campaign.js § languageUrls` decides. Empty — the shipped
+default — is one HTML file: the table swaps in place, the choice persists in
+`localStorage`, and `?lang=ru` forces a language for a creative. Filled with a
+URL per code, each language is its own file: the menu navigates,
+`<html lang>` on the file decides which table renders, and neither a saved
+choice nor `?lang` can override it.
+
+**WHY** tw-flip-cards-lp serves `index.html`, `ru.html` and `en.html` with
+`hreflang` between them, because three indexable URLs is what the campaign
+buys with them. Put the shared header on that landing without this and the
+menu would re-render the card in English inside a Russian page, or a stale
+`tw-lang` in localStorage would do it on the first paint. Before this existed
+the landing had to pin `languages` to a single entry per file, which bought
+safety by removing the menu.
+
+**CODE** `js/i18n.js § "one language per file"` — `byFile()`, `urlFor()`, and
+the two branches in `detect()` and `choose()`; `campaign.js § languageUrls`.
+
+**REJECTED** Rendering the menu as `<a href>` in file mode. It reads better in
+isolation, but it forks `js/shell.js` into two markups for one control, and
+the listbox is what the design draws. One branch in `choose()` is the whole
+difference.
+
+**REJECTED** Detecting the language in file mode at all. The file is the
+answer; anything else is a second opinion about a question already settled.
+
 ---
 
 ## 9. Animation and motion

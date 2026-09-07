@@ -149,8 +149,22 @@ window.TW_CAMPAIGN = {
 
      Every code listed needs an entry in js/strings.js (TW_STRINGS and
      TW_LOCALES) and in `strings` below. tools/smoke.py fails on any key that
-     renders as its own key. */
+     renders as its own key.
+
+     languageUrls: leave it empty and this landing is ONE HTML file whose
+     table swaps in place, the choice persists in localStorage, and ?lang=ru
+     forces a language for a media buyer's creative.
+
+     Fill it and each language is its own file instead: the menu navigates,
+     <html lang> on the file decides the language, and neither a saved choice
+     nor ?lang can override it. That is for a landing that has to serve three
+     indexable URLs with hreflang between them, the way tw-flip-cards-lp
+     does. It costs the runtime switch and buys the three pages.
+
+       languageUrls: { ua: './index.html', ru: './ru.html', en: './en.html' }
+  */
   languages: ['ua', 'ru', 'en'],
+  languageUrls: {},
 
   /* ── Brand and chrome ─────────────────────────────────────────
      These are the same in every TopWin campaign and are here only because a

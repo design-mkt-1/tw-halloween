@@ -6,6 +6,19 @@ here and a bump to `TEMPLATE-REV` in
 just code, also edits `references/decisions.md` in the same commit — same
 repo, same commit, same review, so the two cannot drift apart.
 
+## v1.0.6
+
+- `js/i18n.js` — `campaign.js § languageUrls`. Empty keeps today's behaviour:
+  one HTML file, the table swaps in place, `?lang=` and the saved choice both
+  win. Filled with a URL per language code, the menu navigates instead, and
+  `<html lang>` on the file decides the language — `?lang=` and a stale
+  `localStorage` entry are both ignored, because on a three-file landing they
+  would leave the card speaking a different language than the page around it.
+  Written for tw-flip-cards-lp, which serves ua/ru/en as separate indexable
+  URLs and until now had to pin `languages` to one entry per file to stay
+  safe. `references/decisions.md § 8a`.
+- `campaign.js` — the `languageUrls` key, empty, with both modes written out.
+
 ## v1.0.5
 
 - `css/reset.css` — `body { font-family: var(--font) }`. The page had no font
