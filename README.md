@@ -46,9 +46,14 @@ you do, and the list is the `SHARED` array in `tools/drift.py`:
 
 ```
 css/reset.css   css/tokens.css   css/shell.css   css/form.css   css/stage.css
-js/strings.js   js/i18n.js       js/form.js      js/shell.js
-tools/*.py      .github/workflows/pages.yml
+css/fold.css    js/strings.js    js/i18n.js      js/form.js     js/audio.js
+js/shell.js     tools/drift.py   tools/tokens.py tools/fonts.py tools/smoke.py
+.github/workflows/pages.yml
 ```
+
+Sixteen files. Two scripts in `tools/` are deliberately outside the lock:
+`optimize.py`, for the reason written at `tools/drift.py:58`, and `handoff.py`,
+which packages a build rather than defining what a correct one is.
 
 **These are the campaign** — this is what a campaign *is*:
 
@@ -79,8 +84,9 @@ produced the two divergent repos.
 
 `js/shell.js` replaces the markers with the header and the footer and appends
 the registration `<dialog>` to `<body>`. There is no bundler, so there is no
-`import`: the markup is a template string in that file, and `defer` on the six
-scripts keeps them in source order.
+`import`: the markup is a template string in that file, and `defer` on the seven
+scripts keeps them in source order — `campaign.js`, `strings`, `i18n`, `form`,
+`audio`, `shell`, then `campaign/main.js` last.
 
 The cost, stated rather than defended: the chrome needs JavaScript, and it is
 not in view-source. Both existing landings are already dead without JavaScript
@@ -100,7 +106,7 @@ is documented at the top of `campaign/main.js`.
 
 ---
 
-## Layout: pick one of three
+## Layout: pick one of four
 
 The shell is layout-neutral. Both bars are ordinary blocks measured in px;
 there is no `cqh`, no `cqw`, no `--u` and no `vh` in `css/shell.css`, because
@@ -110,7 +116,12 @@ those units are exactly what welded the last two landings to their own pages.
 |---|---|---|
 | a scrolling page with sections | nothing | 0 |
 | a full-screen page that never scrolls | uncomment `<link href="css/stage.css">` in `index.html` | 1, shipped |
+| one screen of mechanic, the footer below the fold | uncomment `<link href="css/fold.css">` instead | 1, shipped |
 | an artboard-exact hero | define `--u` in `campaign/main.css` | 0 |
+
+`css/stage.css` and `css/fold.css` answer the same question, so a campaign links
+**at most one**. Whichever loaded second would win, and neither file expects the
+other's box.
 
 ---
 
@@ -145,6 +156,7 @@ Every one of these ships empty and is honest about it.
 | `analytics.gtmId`, `metaPixelId` | no script is injected and **not one third-party request is made** |
 | `links.*` | the anchor gets **no `href` at all** — not a tab stop, not announced, not clickable. Never `href="#"` |
 | `offer.spins` | the "+ N FS" line is not rendered |
+| `sounds` | nothing is loaded and the header draws **no speaker at all** — a dead mute button is worse than none. It needs `header.mute: true` *and* a non-empty map |
 
 Two of them block go-live: `links.terms` and `links.privacy`. The page collects
 an 18+ consent, and dead consent links on a gambling registration form are a
@@ -175,6 +187,19 @@ That is how the hryvnia bug reached production.
 any weight, Google's API advertises `U+20B4` in a subset whose file does not
 contain the glyph, and Figma cannot draw it either. Nothing fails loudly,
 because a missing glyph still renders *something*.
+
+### The two that are not guards
+
+```bash
+python tools/optimize.py hero.png --widths 375,1280,1920   # raw/ → assets/, WebP
+python tools/handoff.py                                    # the archive IT receives
+```
+
+`handoff.py` zips exactly what the deploy publishes, by reading the `cp -r …
+_site/` line out of `.github/workflows/pages.yml` rather than restating the
+list, and writes a `README-IT.md` beside it: the five link seams, the form
+endpoint, the passthrough parameters an affiliate click id rides on, and the
+browser floor. Run it when someone else has to host the page.
 
 ---
 

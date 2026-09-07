@@ -1,6 +1,7 @@
 # Starting a new campaign
 
-Eight steps. Nothing here is optional except step 6.
+Nine steps. Nothing here is optional except step 6 and, until someone else has
+to host the page, step 9.
 
 ---
 
@@ -19,7 +20,7 @@ Confirm you are starting clean:
 python -m pip install fonttools brotli playwright
 python -m playwright install chromium
 
-python tools/drift.py            # → 14 shared file(s) match SHARED.lock
+python tools/drift.py            # → 16 shared file(s) match SHARED.lock
 python tools/smoke.py            # → 2 viewport(s) x 3 language(s), all clean
 python -m http.server 8000       # → http://127.0.0.1:8000
 ```
@@ -78,6 +79,10 @@ It is the only config file. Every key is commented in place.
 - `form.hiddenFields` — anything the platform wants on the payload.
 - `header.mute` — `false` unless your mechanic has audio. A dead speaker in the
   bar is worse than no speaker.
+- `sounds` — name → file, and it is what actually draws the speaker: empty means
+  no `Audio` element is made and no button is rendered **even with
+  `header.mute: true`**. A mechanic with audio sets both. It plays a clip with
+  `TW.sound('name', 0.9)` and owns no audio code of its own.
 - `strings` — only the keys this campaign owns. Anything the header, footer or
   dialog says is already in `js/strings.js` and must not be copied here.
 
@@ -171,6 +176,24 @@ git add -A && git commit -m "campaign: <name>" && git push
 the legacy builder publishes the entire repository and the `_site` allowlist
 never runs. Afterwards, confirm on the live URL that `tools/`, `docs/` and
 `raw/` all 404.
+
+---
+
+## 9. Only if someone else hosts it
+
+```bash
+python tools/handoff.py          # → dist/<id>-<date>.zip
+```
+
+The archive holds exactly what the deploy publishes — the script reads the
+`cp -r … _site/` line out of `.github/workflows/pages.yml` instead of restating
+the list, so the two cannot disagree — minus `campaign/smoke.py` and any
+`__pycache__`, which arrive through a door that is meant to be open. Beside the
+files it writes a `README-IT.md`: the five link seams, the form endpoint, the
+passthrough parameters, and the browser floor.
+
+Send the zip. Do not send the repository: it carries `tools/`, `docs/` and the
+guards, none of which are anyone else's problem.
 
 ---
 

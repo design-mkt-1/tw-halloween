@@ -13,8 +13,8 @@ python -m pip install fonttools brotli playwright
 python -m playwright install chromium
 ```
 
-1. **`python tools/drift.py`** — the 14 shared files match `SHARED.lock`.
-   Passes with `drift: 14 shared file(s) match SHARED.lock`. Any `CHANGED` line
+1. **`python tools/drift.py`** — the 16 shared files match `SHARED.lock`.
+   Passes with `drift: 16 shared file(s) match SHARED.lock`. Any `CHANGED` line
    means the clone has forked: move the change into the template, bump
    `SHARED.lock` there, pull it down. Never regenerate the lock in a clone.
 2. **`python tools/tokens.py --check`** — no colour literal, no `rgb()`/`hsl()`

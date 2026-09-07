@@ -26,7 +26,7 @@
       focus.
 
    ── Choosing a layout ────────────────────────────────────────
-   Three modes; the shell supports all three and assumes none.
+   Four modes; the shell supports all four and assumes none.
 
    A. SCROLLING PAGE — the default. Do nothing. The header, your <main> and
       the footer are ordinary blocks. Add `position: sticky; top: 0` to

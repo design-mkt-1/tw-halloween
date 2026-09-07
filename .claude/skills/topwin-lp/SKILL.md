@@ -54,9 +54,9 @@ do not relitigate it here.
   from Roboto, which has none at any weight. Change the copy, run
   `python tools/fonts.py --check`.
 - `css/shell.css` is layout-neutral: px, rem and `clamp()` of a viewport width
-  only — no `vh`, `cqh`, `cqw` or `--u`. The campaign picks one of three layout
-  modes (scrolling page / `css/stage.css` / artboard `--u`), documented at the
-  top of `campaign/main.css`.
+  only — no `vh`, `cqh`, `cqw` or `--u`. The campaign picks one of four layout
+  modes (scrolling page / `css/stage.css` / `css/fold.css` / artboard `--u`),
+  documented at the top of `campaign/main.css`.
 - The registration card is a native `<dialog>` opened with `showModal()`, and
   `TW.openForm()` is the only seam into it. Never call `showModal()` yourself,
   never re-implement the card, never reach into its DOM.
