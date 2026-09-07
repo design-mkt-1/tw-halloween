@@ -6,6 +6,18 @@ here and a bump to `TEMPLATE-REV` in
 just code, also edits `references/decisions.md` in the same commit — same
 repo, same commit, same review, so the two cannot drift apart.
 
+## v1.0.5
+
+- `css/reset.css` — `body { font-family: var(--font) }`. The page had no font
+  at all: every control in `css/shell.css` and every field in `css/form.css`
+  names the family itself, so the header and the card looked right and hid it,
+  while the footer's two lines and the `<noscript>` paragraph inherited the
+  browser's default serif. The shared footer shipped in Times New Roman, in
+  the template and in every clone of it. Neither guard could see it —
+  `tools/fonts.py` checks that a glyph exists in a shipped face, not which
+  face draws it, and `tools/smoke.py` measures geometry. Found by putting the
+  three landings' footers side by side.
+
 ## v1.0.4
 
 - `js/shell.js` — the offer's hero figure is a campaign decision, not a
