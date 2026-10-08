@@ -71,7 +71,12 @@ window.TW_CAMPAIGN = {
 
      terms and privacy block go-live because the page collects an 18+ consent.
      Dead consent links on a gambling registration form are a compliance
-     problem, not a cosmetic one. */
+     problem, not a cosmetic one.
+
+     With the platform connected, terms, privacy and login are taken from the
+     landing response (js/platform.js § applyLinks) and override the values
+     here. Set them anyway: they are what the page shows if the landing call
+     fails, and the consent links must never be empty. */
   links: {
     home:    '',
     login:   '',
@@ -97,15 +102,11 @@ window.TW_CAMPAIGN = {
   passthrough: ['click_id', 'sub1', 'sub2', 'gclid', 'fbclid', 'ttclid'],
 
   /* ── Analytics ────────────────────────────────────────────────
-     Both empty is the shipped default, and with both empty NOT ONE
-     third-party request is made — which is why the CSP in index.html can stay
-     'self'.
-
-     If you set gtmId or metaPixelId you MUST also swap the CSP <meta> in
-     index.html for the commented analytics line. A <meta> policy cannot be
-     written from JavaScript, so this is the one edit that lives outside this
-     file. A CSP refusal appears only in the console; the page looks fine and
-     silently sends nothing.
+     With the IT platform connected (js/platform.js), the analytics IDs come
+     from the landing response: GA, Yandex Metrika and GTM load from there, as
+     IT's own LP loads them, and the CSP in index.html allows those origins.
+     Leave gtmId and metaPixelId empty unless a tag is needed that IT does not
+     load, and check the console for a tag that loads twice.
 
      debug: true logs every TW.track() call instead of needing a tag
      assistant. */
@@ -134,13 +135,46 @@ window.TW_CAMPAIGN = {
      letters "UA". */
   form: {
     endpoint:     '',
-    onRegister:   null,
-    hiddenFields: { landing_id: 'tw-demo' },
+    /* js/platform.js owns the registration: config, landing, reCAPTCHA, the
+       POST and the SSO redirect. It overrides `endpoint`, which stays empty.
+       Remove this line only if the campaign connects to a different API, and
+       then set `endpoint` (or this function) to that API instead. */
+    onRegister:   function (payload) { return window.TWPlatform.register(payload); },
+    /* landing_id is NOT here: the platform's numeric id comes from config.json
+       (or platform.dev), and a string of ours would only compete with it.
+       Anything put here is copied onto the request body BEFORE the platform's
+       own fields, so it can add a field but never overwrite one. */
+    hiddenFields: {},
     demoDone:     true,
     dialCode:     '+380',
     dialFlag:     'assets/img/icons/flag-ua.svg',
     phoneDigits:  9,
     passwordMin:  8
+  },
+
+  /* ── The IT platform (js/platform.js) ─────────────────────────
+     In production the page reads `configUrl` from its own root, one file per
+     landing, written on the server and never committed (see CAMPAIGN.md,
+     "Connect to IT"):
+       { "id": <number>, "email_registration": "<url>", "landing": "<url>" }
+     Without that file the page is NOT connected: the form walks the demo
+     confirmation screen and logs a warning to the console. Nothing on screen
+     says so, which is why the first deploy must be checked in the console.
+
+     `dev` is IT's own TEMP_CONFIG, copied from their landing
+     (_js/enums/enums.js). It is used ONLY on localhost, 127.0.0.1 or an origin
+     starting with https://land-crm, so a developer can try the page before
+     IT issues a landing_id. It never reaches a visitor on the live domain.
+
+     supportEmail is shown on the "unavailable" card; IT hardcodes it. */
+  platform: {
+    configUrl:    'config.json',
+    supportEmail: 'support@jack-pot.com',
+    dev: {
+      id: 8,
+      email_registration: 'https://api2-land-dev.jack-pot.tech/api/jp/registration/email',
+      landing:            'https://api2-land-dev.jack-pot.tech/api/jp/landing/8'
+    }
   },
 
   /* ── Languages ────────────────────────────────────────────────
@@ -213,17 +247,29 @@ window.TW_CAMPAIGN = {
     ua: {
       'title':       'Top Win — Вітальний бонус',
       'demo.lead':   'Демо-механіка.\nЗамініть її на свою в campaign/main.js.',
-      'demo.cta':    'ОТРИМАТИ БОНУС'
+      'demo.cta':    'ОТРИМАТИ БОНУС',
+      'pl.off.title':   'Сторінка тимчасово недоступна',
+      'pl.off.text':    'Реєстрація зараз закрита. Спробуйте пізніше або напишіть нам:',
+      'err.exists':     'Цей email уже зареєстровано. Увійдіть в акаунт',
+      'err.recaptcha':  'Не вдалося пройти перевірку безпеки. Спробуйте ще раз'
     },
     ru: {
       'title':       'Top Win — Приветственный бонус',
       'demo.lead':   'Демо-механика.\nЗамените её на свою в campaign/main.js.',
-      'demo.cta':    'ПОЛУЧИТЬ БОНУС'
+      'demo.cta':    'ПОЛУЧИТЬ БОНУС',
+      'pl.off.title':   'Страница временно недоступна',
+      'pl.off.text':    'Регистрация сейчас закрыта. Попробуйте позже или напишите нам:',
+      'err.exists':     'Этот email уже зарегистрирован. Войдите в аккаунт',
+      'err.recaptcha':  'Не удалось пройти проверку безопасности. Попробуйте ещё раз'
     },
     en: {
       'title':       'Top Win — Welcome bonus',
       'demo.lead':   'Demo mechanic.\nReplace it with yours in campaign/main.js.',
-      'demo.cta':    'CLAIM THE BONUS'
+      'demo.cta':    'CLAIM THE BONUS',
+      'pl.off.title':   'This page is temporarily unavailable',
+      'pl.off.text':    'Registration is closed right now. Please try again later or write to us:',
+      'err.exists':     'This email is already registered. Please log in',
+      'err.recaptcha':  'The security check failed. Please try again'
     }
   }
 };
