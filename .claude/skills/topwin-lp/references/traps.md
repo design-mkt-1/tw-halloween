@@ -190,7 +190,8 @@ page can tell that the id belongs to a different landing.
 **Rule** Never ship id 12, or any id you did not get from IT for this landing.
 `config.example.json` carries the placeholder `0`, which fails loudly
 (`config.json needs { id, email_registration, landing }`) rather than sending
-anything. Test on localhost first: it uses IT's dev landing 8 automatically.
+anything. Get the id from IT before go-live, and test a real registration on
+the live domain, not on localhost (see the next-but-one trap).
 
 ---
 
@@ -207,6 +208,32 @@ for any path given to a script run from Git Bash.
 
 ---
 
+## A real registration from localhost fails on reCAPTCHA
+
+**Symptom** You test on `localhost` and the page loads fine. The form submits,
+then shows the security-check error. The console shows `[platform]
+registration failed: reCAPTCHA verification failed. Please try again.` and the
+`registration/email` POST answers **422**.
+
+**Measured on 2026-10-08** Both this template and tw-flip-cards-lp behave the
+same on localhost, using the same `js/platform.js`. tw-flip-cards-lp registers
+fine in production. The steps before it all pass from localhost:
+- `GET landing/8` answers 200, so CORS is fine;
+- reCAPTCHA loads;
+- ipify answers;
+- the POST reaches IT.
+
+Only IT's server-side reCAPTCHA check refuses.
+
+**Why (inferred, not confirmed by IT)** On localhost the page uses
+`platform.dev`, which is IT's dev landing 8. Its reCAPTCHA key is most likely
+not registered with Google for `localhost`, so the token is rejected for the
+wrong domain. The code is not at fault.
+
+**Rule** Localhost proves everything up to the POST, and nothing after it. To
+prove a real registration and the SSO hand-off, test on a domain IT's key
+allows: for Topwin, a test landing on `landings.top-win.promo` with the id IT
+gave you, before go-live. Do not "fix" platform.js for this error.
 
 ---
 

@@ -106,6 +106,10 @@ loaded by `index.html`). It needs its own id before it goes live:
 4. **Test on localhost.** On `localhost`, `127.0.0.1` or `https://land-crm…` the
    page uses `campaign.js` → `platform.dev`, IT's dev landing 8, not your id.
    Run `python tools/platform_test.py`; it is stubbed and sends no request.
+   On localhost a real submit gets as far as IT and then fails with
+   "reCAPTCHA verification failed" (422). That is expected: see traps.md, "A
+   real registration from localhost fails on reCAPTCHA". Prove a real
+   registration on `landings.top-win.promo` with your own id before go-live.
 5. **Before go-live**, check each of these:
    - the production API is in the CSP `connect-src` (it is, in `index.html`);
    - a reCAPTCHA v3 key for the live domain is registered with Google; the page
