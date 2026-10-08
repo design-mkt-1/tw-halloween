@@ -47,11 +47,12 @@ you do, and the list is the `SHARED` array in `tools/drift.py`:
 ```
 css/reset.css   css/tokens.css   css/shell.css   css/form.css   css/stage.css
 css/fold.css    js/strings.js    js/i18n.js      js/form.js     js/audio.js
-js/shell.js     tools/drift.py   tools/tokens.py tools/fonts.py tools/smoke.py
+js/shell.js     js/platform.js   tools/drift.py   tools/tokens.py tools/fonts.py
+tools/smoke.py  tools/platform_stub.py  tools/platform_test.py
 .github/workflows/pages.yml
 ```
 
-Sixteen files. Two scripts in `tools/` are deliberately outside the lock:
+Nineteen files. Two scripts in `tools/` are deliberately outside the lock:
 `optimize.py`, for the reason written at `tools/drift.py:58`, and `handoff.py`,
 which packages a build rather than defining what a correct one is.
 

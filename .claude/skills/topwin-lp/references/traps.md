@@ -133,17 +133,80 @@ it, and read the comment at the top of the file first.
 sent. Or: a fix "does not apply" and the styles look right anyway.
 
 **Why it is silent** A blocked request produces a console message and no user-
-visible effect at all. The shipped policy is `'self'` / `'none'` throughout,
-which is only correct while `analytics.gtmId` and `analytics.metaPixelId` are
-both empty.
+visible effect at all. The policy names the platform's origins (IT's API, ipify,
+reCAPTCHA, GA, GTM, Yandex). Anything else is refused and the page looks fine.
 
-**Rule** Setting either id requires swapping the CSP `<meta>` in `index.html`
-for the commented analytics line — a `<meta>` policy cannot be written from
-JavaScript, so this is the one campaign edit that cannot live in `campaign.js`.
-Pointing `form.endpoint` at a different origin needs that origin in
-`connect-src`, because `default-src 'self'` covers `fetch`. `style-src` carries
-`'unsafe-inline'` for the `noscript` block and the style attributes the shell
-sets; removing it breaks both silently. See `index.html § CSP comment block`.
+**Rule** Meta's origins are not in the policy. Adding `metaPixelId` requires a
+hand edit of the CSP `<meta>` in `index.html`, because a `<meta>` policy cannot
+be written from JavaScript. Pointing `form.endpoint` at a different origin needs
+that origin in `connect-src`, because `default-src 'self'` covers `fetch`.
+`style-src` carries `'unsafe-inline'` for the `noscript` block and the style
+attributes the shell sets; removing it breaks both silently. See
+`index.html § CSP comment block`.
+
+---
+
+## A missing config.json is a silent demo
+
+**Symptom** The live page looks finished. The form validates, the confirmation
+screen with a login and a password appears, and nothing reaches IT. Statistics
+stay at zero.
+
+**Why it is silent** Without `config.json`, `js/platform.js` takes the demo path
+on purpose, so an unconnected build cannot break the page. The only sign is one
+console line: `[platform] config.json not found: this build is not connected to
+the platform.`
+
+**Rule** Check the console on the live URL before the first campaign goes out.
+`config.json` is not in the Pages allowlist, so a Pages build never has one
+unless the deploy adds it (see CAMPAIGN.md step 4).
+
+---
+
+## IT's inline analytics scripts are blocked by our CSP
+
+**Symptom** IT's own LP has its analytics pasted inline in its HTML. Copied
+as-is, the GA, GTM and Yandex tags never run, and nothing says why.
+
+**Why** Our CSP has no `'unsafe-inline'` in `script-src`. An inline `<script>`
+is refused. The refusal goes to the console only.
+
+**Rule** `js/platform.js` does not paste inline. It appends `<script src>`
+elements for the same tags, from the same landing response, and checks each ID
+first. Keep it that way: a new analytics tag goes through the same route, or
+into the CSP, and never as inline text.
+
+---
+
+## A copied landing id sends registrations to the wrong landing
+
+**Symptom** Registrations work and the confirmation or SSO is fine. The IT
+statistics for this landing are wrong, or show up under another landing.
+
+**Why it is silent** The id is sent as `landing_id` in the body and as the
+`landing/<id>` in the URL. Both are read from `config.json`, and nothing in the
+page can tell that the id belongs to a different landing.
+
+**Rule** Never ship id 12, or any id you did not get from IT for this landing.
+`config.example.json` carries the placeholder `0`, which fails loudly
+(`config.json needs { id, email_registration, landing }`) rather than sending
+anything. Test on localhost first: it uses IT's dev landing 8 automatically.
+
+---
+
+## In Git Bash, `git -C D:\path` loses the backslash
+
+**Symptom** `git -C D:	w-lp-template status` fails, or runs in the wrong place,
+when typed in Git Bash.
+
+**Why** In Git Bash the backslashes in `D:\path` do not survive, so the path git
+receives is not the one you typed. Observed, not traced further.
+
+**Rule** Use forward slashes: `git -C D:/tw-lp-template status`. The same goes
+for any path given to a script run from Git Bash.
+
+---
+
 
 ---
 

@@ -411,23 +411,33 @@ to every desktop. Transparency is flattened onto `--navy-950` unless
 
 ## 11. The form-submission seam
 
-**DECISION** Three routes in precedence order: `form.onRegister(payload)` if it
-is a function, else `form.endpoint` as a JSON POST, else nothing — the validated
-payload goes to `console.info` and, with `form.demoDone`, the confirmation
-screen is walked anyway.
+**DECISION** The form is connected to IT's platform by default (since v1.0.7,
+2026-10-08). `campaign.js` sets `form.onRegister` to `TWPlatform.register`, and
+`js/platform.js` does the rest: config, landing, reCAPTCHA, the registration
+POST and the SSO hand-off. Three routes remain in precedence order:
+`form.onRegister(payload)` if it is a function, else `form.endpoint` as a JSON
+POST, else nothing. The validated payload goes to `console.info` and, with
+`form.demoDone`, the confirmation screen is walked anyway. With no `config.json`,
+`js/platform.js` takes that demo path itself and writes a console warning.
 
-**WHY** The page is fully demoable before the platform exists and cannot
-silently half-ship: there is no state in which it looks wired and is not.
+**WHY** A new Topwin LP must start connected, not wired by hand. IT's LP is
+live and confirmed to deliver registrations to the platform, so the template
+copies its behaviour (§15). The demo path survives so the page stays demoable
+without a config. It is never silent: `js/platform.js` writes
+`[platform] config.json not found` to the console when it takes it.
 
-**CODE** `js/form.js § "submit"` and `§ "the confirmation screen"`;
-`campaign.js § "The registration form"`.
+**CODE** `js/platform.js` (copied byte-for-byte from tw-flip-cards-lp
+`0186bc6`); `js/form.js § "submit"` and `§ "the confirmation screen"`;
+`campaign.js § "The registration form"` and `§ "The IT platform"`.
 
 **REJECTED** A plain HTML `action=` route alongside the JS one, which
 `tw-flip-cards-lp` offered — the confirmation screen simply never appeared on
 one of the two. Also rejected: `form-action` in the CSP, which does **not** fall
 back to `default-src`; leaving it out is what keeps the form free to POST
 wherever IT wires the endpoint, and adding it would break that wiring on the day
-it happens.
+it happens. Still open: the SSO hand-off POSTs to the casino's domain, which the
+API names at runtime, so `form-action` stays missing until IT names the domain
+(see CAMPAIGN.md, "Connect to IT").
 
 The password is in the payload, because a registration hook without one is
 useless — which is exactly why `endpoint` must point at the operator's own TLS
@@ -438,21 +448,25 @@ endpoint and nowhere else. Both credential values are written with
 
 ## 12. The analytics seam
 
-**DECISION** `analytics.gtmId` and `analytics.metaPixelId` both empty is the
-shipped default, and with both empty not one third-party request is made.
+**DECISION** With the platform connected, GA, Yandex Metrika and GTM load from
+the landing response, through `js/platform.js` (§15). `analytics.gtmId` and
+`analytics.metaPixelId` in `campaign.js` are still read by `js/shell.js`, and
+both empty is still the shipped default: then the shell injects nothing.
 `TW.track()` always runs and is a no-op without an id.
 
-**WHY** Zero third-party requests is what lets the CSP in `index.html` ship as
-`'self'` and `'none'` throughout.
+**WHY** The CSP in `index.html` names the analytics origins because IT's
+landing response carries their IDs. The shell's own injection is kept for a tag
+IT does not load. Meta's origin is not in the CSP, so `metaPixelId` is refused
+there, silently.
 
 **CODE** `js/shell.js § injectAnalytics()` and `§ track()`;
 `index.html § CSP comment block`; `campaign.js § "Analytics"` and
 `§ "Tracking and affiliate"`.
 
 **REJECTED** Putting the CSP swap in `campaign.js`. A `<meta>` policy cannot be
-written from JavaScript, so setting either id is the one campaign edit that
-lives outside that file — and a refusal appears only in the console, so the page
-looks fine and silently sends nothing.
+written from JavaScript, so a campaign that needs a tag outside the CSP's list
+edits the `<meta>` in `index.html`. A refusal appears only in the console, so
+the page looks fine and silently sends nothing.
 
 Also rejected: reading the passthrough lazily at click time. It is read once at
 boot, because a mechanic may replace the query string with history state and the
@@ -513,3 +527,46 @@ browsers nobody has reported.
 **NOT VERIFIED** Nobody has run this on a browser at the floor. The numbers
 above are read off the features, not off a device. `references/checklist.md`
 lists what cannot be closed from a desk; this belongs with it.
+
+---
+
+## 15. IT's LP is the reference
+
+**DECISION** Every Topwin LP copies the behaviour of IT's own landing
+(tw-flip-cards-lp at `0186bc6`, live at landings.top-win.promo/testnewland1243/,
+landing 12). Where the template and IT's LP disagree on the platform, IT's LP
+wins. Decided 2026-10-08.
+
+What is copied, and where it lives:
+
+- **Email only.** `js/platform.js` removes the phone tab, because the API is
+  `registration/email` and there is no phone route.
+- **clientIp** from `api.ipify.org`, sent in the registration body.
+- **The reCAPTCHA badge is hidden** (`css/form.css § .grecaptcha-badge`).
+- **Analytics** (GA, Yandex Metrika, GTM) from the landing response, loaded as
+  external `<script src>` only. IT's inline analytics scripts would be blocked
+  by our CSP without `'unsafe-inline'`, so `js/platform.js` appends the tags
+  instead and checks each ID first.
+- **SSO** via `res.data.redirectUrl`: the token goes to its mirror's
+  `/api/welcome` as `tmpToken`, with `redirect` = `redirectUrl` plus the page
+  query. Without `redirectUrl`, the fallback is the casino's `/api/welcome` with
+  `redirect_link`. The confirmation screen that shows a password is never
+  shown on success.
+
+**WHY** IT's flow is proven live: registrations reach their platform from
+landing 12. A template that drifts from it would be a second, untested flow.
+Every Topwin LP behaves the same, so a change to the platform is one change in
+one file, `js/platform.js`, which is a shared file under `tools/drift.py`.
+
+**CODE** `js/platform.js` (the whole flow, in its header comment);
+`tools/platform_test.py` (67 checks against `tools/platform_stub.py`);
+`index.html § CSP comment`.
+
+**REJECTED** Adapting IT's flow to the template's demo form. The demo form has
+a phone tab and an `endpoint` the platform does not use. Changing the flow to
+suit the form would make the registration body differ from IT's, and IT's API
+is the one that answers.
+
+**NOT VERIFIED** The redirect origin (`<mirror>` or the casino) is not verified
+against every landing. The CSP's `form-action` stays missing for the SSO origin
+until IT names it. Both are open, see CAMPAIGN.md "Connect to IT".

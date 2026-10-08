@@ -35,11 +35,11 @@ python -m playwright install chromium
    the promo block survives a language change; Escape closes; every tap target
    at least 24×24; a clean console.
    Add campaign assertions in `campaign/smoke.py` as `check(page, viewport, lang)`.
-5. **The form is wired, or knowingly is not.** `form.endpoint` or
-   `form.onRegister` set — or a written statement from the owner that the demo
-   console route ships. There is no third state; `tools/smoke.py` allows the
-   "not wired to anything" console line precisely so this stays a human
-   decision.
+5. **The form is connected to IT, and `config.json` is on the server.** The
+   platform is on by default (`campaign.js` → `form.onRegister`). Check that
+   `config.json` exists with the id IT gave THIS landing, and that the console
+   on the live URL has no `[platform] config.json not found` line. A missing
+   `config.json` is a silent demo, not an error. See CAMPAIGN.md step 4.
 6. **`links.terms` and `links.privacy` are non-empty.** The page collects an
    18+ consent. Check the rendered anchors carry an `href`, not just that the
    config has a value.
@@ -79,8 +79,8 @@ python -m http.server 8099 --bind 127.0.0.1
 - With JavaScript off: the `noscript` line shows rather than a blank page.
 - Network panel: zero requests to `googleapis`, `gstatic` or any third party
   with analytics unset. Only the subsets the page needs are downloaded.
-- Console: clean apart from the "not wired to anything" line, if the form is
-  knowingly unwired.
+- Console: clean. The "not wired to anything" line is for a build with no
+  platform, which the template no longer ships.
 
 ## CANNOT BE CLOSED FROM A DESK — report as open, never as passed
 

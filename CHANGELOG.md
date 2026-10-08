@@ -6,6 +6,32 @@ here and a bump to `TEMPLATE-REV` in
 just code, also edits `references/decisions.md` in the same commit — same
 repo, same commit, same review, so the two cannot drift apart.
 
+## v1.0.7
+
+- `js/platform.js` — new, shared. Every landing registers through IT's platform
+  by default: the config, the landing GET, reCAPTCHA v3, the registration POST
+  and the SSO hand-off. Copied byte-for-byte from tw-flip-cards-lp `0186bc6`,
+  IT's reference landing, which is live. Email only; the phone tab is removed.
+  `references/decisions.md § 15`.
+- `index.html` — `js/platform.js` loaded after `js/shell.js`. The CSP names the
+  platform's origins (the production and dev APIs, ipify, reCAPTCHA, GA, GTM,
+  Yandex) and the commented analytics swap is gone: analytics come from the
+  landing response now. `references/seams.md § The platform contract`.
+- `css/form.css` — `.grecaptcha-badge` hidden, as IT's LP hides it.
+- `campaign.js` — `form.onRegister` is `TWPlatform.register`, `form.hiddenFields`
+  is empty (`landing_id` comes from `config.json`), the `platform` block, and
+  the platform strings (`err.exists`, `err.recaptcha`, `pl.off.*`) in UA/RU/EN.
+- `config.example.json` — new, shared shape with a placeholder id `0`, not
+  IT's 12. `config.json` is in `.gitignore`.
+- `tools/platform_stub.py`, `tools/platform_test.py` — new, shared. 67 checks
+  against a stub; no request leaves the page. Run in `.github/workflows/pages.yml`.
+- `tools/handoff.py` — README-IT gets section 3, the platform connection, written
+  for any landing.
+- `.github/workflows/pages.yml` — `platform_test.py` in the guards. The publish
+  allowlist is unchanged: `config.example.json`, `tools/` and `docs/` do not ship.
+- `CAMPAIGN.md` — step 4, "Connect to IT". The steps after it are renumbered.
+- `docs/SHELL.md` — new: a visual guide to the header and footer.
+
 ## v1.0.6
 
 - `js/i18n.js` — `campaign.js § languageUrls`. Empty keeps today's behaviour:

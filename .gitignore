@@ -14,6 +14,11 @@ venv/
 
 _site/
 
+# The IT platform's config for THIS landing: the landing_id IT gave it, and
+# nothing else. Written on the server, never committed. A copied id from
+# another landing sends registrations there (CAMPAIGN.md step 4).
+config.json
+
 # tools/handoff.py writes the IT archive here. It is a build output of
 # committed files: reproducible in one command, and 400 kB of zip nobody
 # should be diffing.

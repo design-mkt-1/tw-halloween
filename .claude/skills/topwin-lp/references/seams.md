@@ -51,18 +51,25 @@ a fork waiting to happen.
 Precedence, checked in this order in `js/form.js § onSubmit()`:
 
 1. `form.onRegister(payload)` if it is a function. It returns a promise and
-   overrides `endpoint`. Resolve with `{ login, password }` to fill the
-   confirmation screen; resolve with anything else and the screen falls back to
-   what the visitor typed.
+   overrides `endpoint`. **Since v1.0.7 the shipped `campaign.js` sets it to
+   `TWPlatform.register`**, so every landing registers through
+   `js/platform.js` (the contract is in the next section). Resolve with
+   `{ login, password }` to fill the confirmation screen; resolve with anything
+   else and the screen falls back to what the visitor typed. The platform never
+   resolves on success: the page navigates to the casino.
 2. `form.endpoint` — a JSON POST with `Content-Type: application/json`. A
    non-2xx throws; the response is parsed as JSON if it parses. `err.network`
    is shown on rejection.
-3. Neither — **the shipped default**. The validated payload goes to
-   `console.info` with the text "not wired to anything", and with
+3. Neither. The template no longer ships this path. The validated payload goes
+   to `console.info` with the text "not wired to anything", and with
    `form.demoDone: true` the confirmation screen is walked anyway. Loud in the
-   console, invisible to the visitor, impossible to mistake for a working
-   integration. That string is the one entry on `tools/smoke.py`'s console
-   ignore-list.
+   console, invisible to the visitor. That string is the one entry on
+   `tools/smoke.py`'s console ignore-list.
+
+When `onRegister` is the platform and there is no `config.json`, the platform
+takes the demo path itself: the same confirmation screen, and the console line
+`[platform] config.json not found: this build is not connected to the
+platform.` instead.
 
 The payload carries `method`, `contact`, `email`, `phone`, `password`,
 `consent`, `lang` (the **BCP-47 tag**, not the internal code), `bonus`,
@@ -111,14 +118,58 @@ nothing announced. Never write `href="#"`; `tools/smoke.py` fails on it.
 `terms` and `privacy` block go-live. The page collects an 18+ consent, and dead
 consent links on a gambling registration form are a compliance problem.
 
+## The platform contract (`js/platform.js`)
+
+The file is shared (`tools/drift.py`) and copied byte-for-byte from IT's
+reference landing, `tw-flip-cards-lp` at `0186bc6`. Its header comment has the
+full flow. What it reads and sends:
+
+**`config.json`** at the site root, one per landing, never committed:
+
+- `id` (number): the landing's id from IT. Sent in the body as `landing_id`.
+- `email_registration`: the POST URL, `https://<api>/api/jp/registration/email`.
+- `landing`: the GET URL, `https://<api>/api/jp/landing/<id>`.
+- `trackingId` exists in IT's config. Nothing in `js/platform.js` reads it.
+- Missing (404) means demo, with the console warning. A malformed file
+  rejects, and the next submit tries again.
+
+**`campaign.js` § platform**: `configUrl`, `supportEmail`, and `dev`, which is
+IT's test landing (id 8). `dev` is used only on localhost, 127.0.0.1 or an
+origin starting with `https://land-crm`.
+
+**GET landing** returns `{ data: … }`. Fields the page uses: `active` (false
+shows the "unavailable" card and nothing else happens), `recaptcha_key`, `rules`
+(the Terms link, and the casino's host for the SSO fallback), `policy` (Privacy),
+`login`, `redirect_link` (the SSO fallback path), `country`, `currency`,
+`promocode`, and `analytics_google`, `analytics_yandex`, `gtm_tag` (IDs, each
+checked before use). Analytics load even when `active` is false, as IT's LP does.
+
+**POST registration** body, in this order, so a field of the same name
+elsewhere cannot overwrite it: `hiddenFields` and the whitelisted URL params
+(`campaign.js § passthrough`), then `email`, `password`, `landing_id`,
+`language` (`uk`, `ru` or `en`, the BCP-47 tag), `currency`, `country`,
+`promocode`, `receivePromos: true`, `clientIp` (from `api.ipify.org`), and
+`g-recaptcha-response` (reCAPTCHA v3, action `register`).
+
+**Response**: `data.accessToken` and `data.redirectUrl`.
+
+**SSO hand-off**: the token is POSTed as a form to
+`<origin of redirectUrl>/api/welcome` with `tmpToken` and `redirect` =
+`redirectUrl` plus the page's query. Without `redirectUrl` it goes to
+`<casino>/api/welcome`, with `redirect` = `<casino>/<lang>/<redirect_link>` plus
+the query. The password is never in this POST.
+
+**Errors**: `{ errors: [msg] }`. A message containing "already registered" or
+"recaptcha" gets its own translated line (`err.exists`, `err.recaptcha` in
+`campaign.js § strings`). Anything else is the generic `err.network`.
+
 ## The analytics CSP swap
 
-`index.html` ships a policy of `'self'` and `'none'` throughout, which is only
-correct because the default campaign makes zero third-party requests. Setting
-`analytics.gtmId` or `analytics.metaPixelId` means commenting out that `<meta>`
-and uncommenting the analytics one directly below it, which adds
-`googletagmanager.com` and `connect.facebook.net` to `script-src` and the
-matching image and connect origins.
+`index.html` names the analytics origins in its CSP (GA, GTM, Yandex Metrika),
+because `js/platform.js` loads them from the landing response. Meta's origins
+are **not** in the CSP. Setting `analytics.metaPixelId` therefore needs a hand
+edit of the `<meta>` in `index.html`, adding the origins that the snippet in
+`js/shell.js § injectAnalytics` loads.
 
 This cannot live in `campaign.js`: **a `<meta>` policy cannot be written from
 JavaScript.** It is parsed with the document, long before any script runs. A

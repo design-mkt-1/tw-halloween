@@ -1,7 +1,7 @@
 # Starting a new campaign
 
-Nine steps. Nothing here is optional except step 6 and, until someone else has
-to host the page, step 9.
+Ten steps. Nothing here is optional except step 7 and, until someone else has
+to host the page, step 10.
 
 ---
 
@@ -88,7 +88,38 @@ It is the only config file. Every key is commented in place.
 
 ---
 
-## 4. Pick the layout mode
+## 4. Connect to IT
+
+Every landing is connected to IT's platform by default (`js/platform.js`,
+loaded by `index.html`). It needs its own id before it goes live:
+
+1. **Ask IT for this landing's `landing_id`.** Do not guess it and do not copy
+   one from another campaign.
+2. **On the server only**, copy `config.example.json` to `config.json` next to
+   `index.html`. Set `id` to IT's number, and `landing` to
+   `…/api/jp/landing/<that same id>`. `config.json` is never committed: the
+   template's `.gitignore` names it. The Pages allowlist does not publish it, so
+   a Pages-hosted build has no `config.json` and runs as a silent demo.
+3. **Never ship id 12.** That is tw-flip-cards-lp's live landing. A copied id
+   silently sends registrations to another landing, and the only symptom is
+   wrong statistics. Nothing on screen says so.
+4. **Test on localhost.** On `localhost`, `127.0.0.1` or `https://land-crm…` the
+   page uses `campaign.js` → `platform.dev`, IT's dev landing 8, not your id.
+   Run `python tools/platform_test.py`; it is stubbed and sends no request.
+5. **Before go-live**, check each of these:
+   - the production API is in the CSP `connect-src` (it is, in `index.html`);
+   - a reCAPTCHA v3 key for the live domain is registered with Google; the page
+     uses the `recaptcha_key` that IT's landing response returns;
+   - CORS on IT's landing and registration endpoints allows the live domain;
+   - the live URL's browser console shows no `[platform] config.json not found`
+     line and no CSP refusal.
+
+Still open, waiting on IT: the CSP `form-action` for the SSO origin (the
+casino's domain comes from the API at runtime, so it cannot be written yet).
+
+---
+
+## 5. Pick the layout mode
 
 | mode | what you do |
 |---|---|
@@ -101,7 +132,7 @@ Write which one, and why, in `docs/BRIEF.md`.
 
 ---
 
-## 5. Build the mechanic
+## 6. Build the mechanic
 
 Three files and one markup block:
 
@@ -126,16 +157,19 @@ Never ship the Figma PNG.
 
 ---
 
-## 6. Only if you set an analytics id
+## 7. Only if you set analytics.metaPixelId
 
-Swap the CSP `<meta>` in `index.html` for the commented analytics one. This is
-the single campaign edit that cannot live in `campaign.js`: a meta policy
-cannot be written from JavaScript, and a CSP refusal appears only in the
-console — the page looks fine and silently sends nothing.
+GA, GTM and Yandex come from the landing response, through `js/platform.js`,
+and need no edit. Meta's origins are not in the CSP. Adding `metaPixelId` means
+hand-editing the CSP `<meta>` in `index.html` to allow the origins that
+`js/shell.js § injectAnalytics` loads. This is the one campaign edit that
+cannot live in `campaign.js`: a meta policy cannot be written from JavaScript,
+and a CSP refusal appears only in the console. The page looks fine and silently
+sends nothing.
 
 ---
 
-## 7. Finish the head
+## 8. Finish the head
 
 In `index.html`: the `<title>` fallback text, `<meta name="description">`, and
 `theme-color` if the campaign's ground colour differs. The default-locale copy
@@ -149,7 +183,7 @@ at 16px.
 
 ---
 
-## 8. The gate
+## 9. The gate
 
 Run all four. Each one prints its own evidence; none of them passes on
 assertion.
@@ -184,7 +218,7 @@ never runs. Afterwards, confirm on the live URL that `tools/`, `docs/` and
 
 ---
 
-## 9. Only if someone else hosts it
+## 10. Only if someone else hosts it
 
 ```bash
 python tools/handoff.py          # → dist/<id>-<date>.zip
