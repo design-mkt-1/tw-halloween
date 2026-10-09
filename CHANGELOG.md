@@ -6,6 +6,38 @@ here and a bump to `TEMPLATE-REV` in
 just code, also edits `references/decisions.md` in the same commit — same
 repo, same commit, same review, so the two cannot drift apart.
 
+## v1.0.8
+
+Text only: no behaviour changes. README-IT and the comments told IT four wrong
+things, found by tw-penalty's IT archive audit on 2026-10-09.
+
+- `tools/handoff.py` — README-IT:
+  - CSP: `form-action` is absent, so the `/api/welcome` POST is not
+    restricted. If IT adds it, it must allow the origin of the `redirectUrl`
+    in the registration response (TopWin: the tracker mirror), and the
+    landing's `rules` origin only when there is no `redirectUrl`. It used to
+    say "the casino domain", which would block the hand-off silently.
+  - `config.json` sits next to `index.html`, also on subfolder hosting; it
+    used to say "the site root".
+  - Terms, Privacy and Login come from the landing response; IT does nothing
+    for them, and the `campaign.js` values are only a fallback. The "BLOCKS
+    GO-LIVE" labels are gone.
+  - The promo code is IT's, set on their CRM landing (`promocode`).
+  - Section 7 no longer counts the guards.
+- `js/platform.js`, `tools/platform_test.py` — comments: `config.json` is next to
+  `index.html`, not at the site root.
+- `tools/drift.py` — comment: "the guards", not "the four guards".
+- `campaign.js` — `offer.code` is `''`, not `'DEMO225'`, with a comment that
+  says where it goes: `js/form.js § payload()` still sends it as `bonus` when
+  the form is NOT on the platform (`form.endpoint`, or the demo console), so
+  the key stays; `js/platform.js` never reads it. The links comment says
+  terms/privacy/login come from the platform and block go-live only off it.
+- `index.html` — the CSP comment names the `redirectUrl` origin, not the casino
+  domain.
+- `README.md`, `CAMPAIGN.md`, `references/seams.md`, `references/checklist.md`,
+  `references/decisions.md`, `SKILL.md` — the same corrections; five guards,
+  with `platform_test.py` in the list.
+
 ## v1.0.7
 
 - `js/platform.js` — new, shared. Every landing registers through IT's platform

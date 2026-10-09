@@ -13,11 +13,11 @@ value: an unset link is not a dead link, an unset endpoint is not a broken form.
 | `offer.amount` | `promo.amount` via `{amount}` | the amount line is not rendered |
 | `offer.currency` | `promo.amount` via `{currency}` | the amount reads without a unit |
 | `offer.spins` | `promo.spins` via `{spins}` | the "+ N FS" line is hidden entirely |
-| `offer.code` | `js/form.js § payload()` as `bonus` | the platform is told no bonus code |
+| `offer.code` | `js/form.js § payload()` as `bonus`; only off the platform (`endpoint` or demo). `js/platform.js` sends `promocode` from IT's landing instead | nothing; on the platform it is never sent |
 | `links.home` | header logo | the logo is not a link — no `href`, no tab stop |
-| `links.login` | "Already have an account?" under the CTA | the anchor is not a link |
-| `links.terms` | consent sentence, first link | **BLOCKS GO-LIVE** |
-| `links.privacy` | consent sentence, second link | **BLOCKS GO-LIVE** |
+| `links.login` | "Already have an account?" under the CTA; on the platform, `login` from the landing response | fallback only; off the platform the anchor is not a link |
+| `links.terms` | consent sentence, first link; on the platform, `rules` from the landing response | fallback only; off the platform **BLOCKS GO-LIVE** |
+| `links.privacy` | consent sentence, second link; on the platform, `policy` from the landing response | fallback only; off the platform **BLOCKS GO-LIVE** |
 | `links.cta` | the done screen's "GO TO WEBSITE" button | the button is inert |
 | `params` | `js/shell.js § params()` → every `links` URL and the payload | no query appended, nothing added to the payload |
 | `passthrough` | `js/shell.js`, read once at boot | nothing rides through from the landing URL |
@@ -115,8 +115,12 @@ so a campaign hook cannot strand the visitor in a half-open dialog.
 it returns null. An element with no `href` is simply not a link — no tab stop,
 nothing announced. Never write `href="#"`; `tools/smoke.py` fails on it.
 
-`terms` and `privacy` block go-live. The page collects an 18+ consent, and dead
-consent links on a gambling registration form are a compliance problem.
+With the platform connected, `terms`, `privacy` and `login` are set from IT's
+landing response (`js/platform.js § applyLinks`, after `wireLinks()` on every
+language switch), and the `campaign.js` values are only the fallback for a
+failed landing call. Off the platform `terms` and `privacy` block go-live. The
+page collects an 18+ consent, and dead consent links on a gambling
+registration form are a compliance problem.
 
 ## The platform contract (`js/platform.js`)
 
@@ -124,7 +128,9 @@ The file is shared (`tools/drift.py`) and copied byte-for-byte from IT's
 reference landing, `tw-flip-cards-lp` at `0186bc6`. Its header comment has the
 full flow. What it reads and sends:
 
-**`config.json`** at the site root, one per landing, never committed:
+**`config.json`** next to `index.html` (fetched by the relative path
+`config.json`, so on subfolder hosting it is in the subfolder), one per
+landing, never committed:
 
 - `id` (number): the landing's id from IT. Sent in the body as `landing_id`.
 - `email_registration`: the POST URL, `https://<api>/api/jp/registration/email`.

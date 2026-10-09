@@ -435,9 +435,11 @@ without a config. It is never silent: `js/platform.js` writes
 one of the two. Also rejected: `form-action` in the CSP, which does **not** fall
 back to `default-src`; leaving it out is what keeps the form free to POST
 wherever IT wires the endpoint, and adding it would break that wiring on the day
-it happens. Still open: the SSO hand-off POSTs to the casino's domain, which the
-API names at runtime, so `form-action` stays missing until IT names the domain
-(see CAMPAIGN.md, "Connect to IT").
+it happens. The SSO hand-off POSTs to the origin of the `redirectUrl` that the
+registration response returns (for TopWin, the tracker mirror), or to the host
+of the landing's `rules` URL when there is none. Both are named at runtime, so
+`form-action` stays out; README-IT section 3 tells IT which origin to allow if
+they add it (see CAMPAIGN.md, "Connect to IT").
 
 The password is in the payload, because a registration hook without one is
 useless — which is exactly why `endpoint` must point at the operator's own TLS
@@ -568,5 +570,5 @@ suit the form would make the registration body differ from IT's, and IT's API
 is the one that answers.
 
 **NOT VERIFIED** The redirect origin (`<mirror>` or the casino) is not verified
-against every landing. The CSP's `form-action` stays missing for the SSO origin
-until IT names it. Both are open, see CAMPAIGN.md "Connect to IT".
+against every landing. The CSP's `form-action` stays out, so the SSO origin
+is not restricted; see CAMPAIGN.md "Connect to IT".

@@ -35,7 +35,7 @@ generation of the same failure — three greens invented by hand, `#30d158`,
 The next landing invented a fourth orange anyway.
 
 Prose does not stop that. So the shared files are hashed and the hashes are
-committed, and four guards run on every pull request.
+committed, and five guards run on every pull request.
 
 ---
 
@@ -159,9 +159,12 @@ Every one of these ships empty and is honest about it.
 | `offer.spins` | the "+ N FS" line is not rendered |
 | `sounds` | nothing is loaded and the header draws **no speaker at all** — a dead mute button is worse than none. It needs `header.mute: true` *and* a non-empty map |
 
-Two of them block go-live: `links.terms` and `links.privacy`. The page collects
-an 18+ consent, and dead consent links on a gambling registration form are a
-compliance problem, not a cosmetic one.
+`links.terms`, `links.privacy` and `links.login` come from IT's landing
+response once the platform is connected (`js/platform.js § applyLinks`); the
+values here are only the fallback if that call fails. A landing that is not on
+the platform has no other source, and there `terms` and `privacy` block
+go-live: the page collects an 18+ consent, and dead consent links on a
+gambling registration form are a compliance problem, not a cosmetic one.
 
 Setting an analytics id also needs the CSP `<meta>` in `index.html` swapped for
 the commented one — a meta policy cannot be written from JavaScript. A CSP
@@ -176,10 +179,11 @@ python tools/drift.py           # the shared files are the template's
 python tools/tokens.py --check  # no colour literal outside css/tokens.css
 python tools/fonts.py --check   # every rendered character exists in a shipped face
 python tools/smoke.py           # a real browser, 2 viewports x every language
+python tools/platform_test.py   # the IT platform flow, against a stub
 ```
 
 They need `fonttools brotli playwright` and one `python -m playwright install
-chromium`. All four run on every pull request as well as every push — in the
+chromium`. All five run on every pull request as well as every push — in the
 landing this workflow came from they lived inside the build job, which only ran
 after a merge, so every guard reported a problem that was already on `main`.
 That is how the hryvnia bug reached production.

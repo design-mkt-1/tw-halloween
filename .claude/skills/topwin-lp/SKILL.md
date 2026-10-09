@@ -71,9 +71,13 @@ do not relitigate it here.
   written into a language table.
 - An unset link gets NO `href`. Never `"#"` — a mark that takes focus, is
   announced as a link and then does nothing is a broken control.
-- `links.terms` and `links.privacy` block go-live. The page collects an 18+
-  consent; dead consent links on a gambling registration form are a compliance
-  problem, not a cosmetic one.
+- With the platform connected, `links.terms`, `links.privacy` and `links.login`
+  come from IT's landing response (`js/platform.js § applyLinks`); campaign.js
+  is only the fallback. Off the platform, `terms` and `privacy` block go-live:
+  the page collects an 18+ consent, and dead consent links on a gambling
+  registration form are a compliance problem, not a cosmetic one.
+- `offer.code` is not sent to the platform. The promo code is IT's, set on
+  their CRM landing and sent as `promocode` from the landing response.
 - Every `input` is at least 16px, including the ones the design draws at 15.
   Below that iOS Safari zooms the page on focus.
 - `css/reset.css` forces `[hidden] { display: none !important }` and `display`
@@ -184,8 +188,8 @@ with the exact commands. Follow it; these eight steps are the map.
   general. This project's defect is too many sources of taste; a third is not
   the fix.
 - `superpowers:test-driven-development` — no framework, no `package.json`, no
-  runner. Verification is the four guards in `tools/`.
+  runner. Verification is the guards in `tools/`.
 
-TEMPLATE-REV: v1.0.7 — before starting, compare this against the template's
+TEMPLATE-REV: v1.0.8 — before starting, compare this against the template's
 HEAD tag; if they differ, read the template's diff before trusting any path or
 value quoted here.

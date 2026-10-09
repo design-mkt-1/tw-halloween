@@ -67,9 +67,14 @@ It is the only config file. Every key is commented in place.
   The words around them live in `strings`, once per locale, and interpolate
   `{percent} {amount} {currency} {spins}`. Changing 225% / 15000 to
   300% / 20000 is a two-value edit here and no language table is touched.
-- `links` — `home`, `login`, `terms`, `privacy`, `cta`. **`terms` and
-  `privacy` block go-live.** An empty string leaves the anchor with no `href`
-  at all, which is the honest state of an unfilled seam; never write `"#"`.
+- `links` — `home`, `login`, `terms`, `privacy`, `cta`. With the platform
+  connected, `terms`, `privacy` and `login` come from IT's landing response and
+  these values are only the fallback if that call fails. **Off the platform,
+  `terms` and `privacy` block go-live.** An empty string leaves the anchor with
+  no `href` at all, which is the honest state of an unfilled seam; never write
+  `"#"`.
+- `offer.code` is not sent to the platform: IT sets the promo code on their
+  CRM landing and `js/platform.js` sends it as `promocode`.
 - `params` — the campaign's UTM block, appended to every link and copied into
   the form payload.
 - `passthrough` — query parameters on the landing URL that ride through to the
@@ -118,8 +123,12 @@ loaded by `index.html`). It needs its own id before it goes live:
    - the live URL's browser console shows no `[platform] config.json not found`
      line and no CSP refusal.
 
-Still open, waiting on IT: the CSP `form-action` for the SSO origin (the
-casino's domain comes from the API at runtime, so it cannot be written yet).
+Not needed, but possible: a CSP `form-action` for the SSO origin. It is absent,
+so the `/api/welcome` POST is not restricted. If IT adds one, it must allow the
+origin of the `redirectUrl` in the registration response (for TopWin, the
+tracker mirror, not the casino), and the origin of the landing's `rules` URL
+only if a response can come back without `redirectUrl`. README-IT section 3
+says the same.
 
 ---
 

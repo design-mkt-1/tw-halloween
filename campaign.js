@@ -55,8 +55,16 @@ window.TW_CAMPAIGN = {
     currency: 'UAH',
     spins:    '',
     hero:     '',            // '' = percent if there is one, else amount
-    code:     'DEMO225'      // what the platform is told; payload field `bonus`
+    code:     ''             // NOT sent to IT's platform; see below
   },
+
+  /* offer.code is read by js/form.js § payload() as the field `bonus`, and
+     that payload only leaves the page when the form is NOT on the platform:
+     form.endpoint, or the console in demo mode. js/platform.js builds its own
+     body and sends `promocode` from IT's landing response, so on a connected
+     landing the promo code is set by IT, on their CRM landing, and this value
+     goes nowhere. Fill it only for a landing that posts to its own endpoint,
+     and only with a code the client gave. It is also {code} in `strings`. */
 
   /* ── Where the buttons go ─────────────────────────────────────
      '' leaves the anchor WITHOUT an href, so it is not a link at all: no tab
@@ -64,19 +72,20 @@ window.TW_CAMPAIGN = {
      that takes focus and then does nothing reads as a broken control.
 
        home     header logo
-       login    "Already have an account? Log in", under the CTA
-       terms    consent sentence, first link          ← BLOCKS GO-LIVE
-       privacy  consent sentence, second link         ← BLOCKS GO-LIVE
+       login    "Already have an account? Log in", under the CTA  ← platform
+       terms    consent sentence, first link                       ← platform
+       privacy  consent sentence, second link                      ← platform
        cta      the done screen's "GO TO WEBSITE" button
 
-     terms and privacy block go-live because the page collects an 18+ consent.
-     Dead consent links on a gambling registration form are a compliance
-     problem, not a cosmetic one.
+     With the platform connected, terms, privacy and login come from IT's
+     landing response (`rules`, `policy`, `login`; js/platform.js § applyLinks)
+     and IT does nothing for them. The values here are only a fallback for when
+     the landing call fails; '' then leaves the anchor without an href.
 
-     With the platform connected, terms, privacy and login are taken from the
-     landing response (js/platform.js § applyLinks) and override the values
-     here. Set them anyway: they are what the page shows if the landing call
-     fails, and the consent links must never be empty. */
+     A landing that is NOT on the platform has no other source: there terms
+     and privacy block go-live, because the page collects an 18+ consent and
+     dead consent links on a gambling registration form are a compliance
+     problem, not a cosmetic one. */
   links: {
     home:    '',
     login:   '',

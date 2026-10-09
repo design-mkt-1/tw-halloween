@@ -40,9 +40,12 @@ python -m playwright install chromium
    `config.json` exists with the id IT gave THIS landing, and that the console
    on the live URL has no `[platform] config.json not found` line. A missing
    `config.json` is a silent demo, not an error. See CAMPAIGN.md step 4.
-6. **`links.terms` and `links.privacy` are non-empty.** The page collects an
-   18+ consent. Check the rendered anchors carry an `href`, not just that the
-   config has a value.
+6. **The consent links work on the live URL.** The page collects an 18+
+   consent. Check the rendered Terms and Privacy anchors carry an `href`, not
+   just that a config has a value. With the platform connected they come from
+   IT's landing response (`rules`, `policy`), and `links.terms` and
+   `links.privacy` in campaign.js are only the fallback; off the platform those
+   two must be non-empty.
 7. **The repository's Pages source is set to "GitHub Actions".** Settings →
    Pages. Left on a branch the legacy Jekyll builder publishes the whole
    repository and the workflow is still green.
