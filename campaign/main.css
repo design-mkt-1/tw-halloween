@@ -71,6 +71,320 @@
   --cmp-blue-deep: #012b67;   /* today card, bottom of its gradient */
   --cmp-blue-line: #09449d;   /* step dividers */
   --cmp-cta-hi:    #ff8301;   /* GET BONUS gradient, top; bottom is --accent */
+  --cmp-night:     #000100;   /* hero ground under the art, bg 21:600 */
+  --cmp-shade:     #00040d;   /* blurred ellipse behind the title, 21:664 */
+  --cmp-step-text: #a8c4f0;   /* "How does it work?" body copy, 21:541 */
+  --cmp-ring-from: #1e40af;   /* language button ring, 21:645 gradient start */
+  --cmp-ring-to:   #3b82f6;   /* language button ring, 21:645 gradient end */
+  --cmp-ring-brd:  #1e2a44;   /* language button inner border, 21:646 */
 }
 
-/* ══ page ═════════════════════════════════════════════════════ */
+/* ══ page ═════════════════════════════════════════════════════
+   Layout A, a scrolling page: hero, "How does it work?", the shell footer.
+   One breakpoint of our own, 1024px: below it the hero is a column (title,
+   cards, the fisherman under them, Figma 21:587); from it the title sits
+   left and the cards right (21:533). The shell's 700px still moves its own
+   two bars. The container is 1280 + 80px gutters wide, 16px on mobile. */
+
+body { background: var(--cmp-bg); }
+
+#tw-main { background: var(--cmp-bg); color: var(--text); }
+
+
+/* ══ header over the hero ═════════════════════════════════════
+   Figma draws no bar: the Halloween logo and a round flag button stand on
+   the art. The shell's markup is untouched; only its box is restyled here.
+   Absolute, so <main> starts at the top of the page under it. */
+
+.tw-hdr {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: auto;
+  padding: 6px 16px 0;
+  background: none;
+  border: 0;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* 532x178 is the file; 159x53 is 21:617. */
+.tw-hdr__logo img { width: 159px; height: auto; aspect-ratio: 532 / 178; }
+
+/* The language trigger as Figma draws it (21:618): the current flag in a
+   blue ring. 44px rather than the drawn 40 for the tap target. The globe,
+   the code and the caret are hidden; the button keeps its aria-label. */
+html[lang="uk"] { --cmp-flag: url("../assets/img/icons/flag-ua.svg"); }
+html[lang="ru"] { --cmp-flag: url("../assets/img/icons/flag-ru.svg"); }
+html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
+
+.tw-lang {
+  width: 44px;
+  height: 44px;
+  padding: 2px;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(119deg, var(--cmp-ring-from) 6%, var(--cmp-ring-to) 100%);
+}
+
+.tw-lang > * { display: none; }
+
+.tw-lang::before {
+  content: "";
+  flex: 1;
+  align-self: stretch;
+  border: 1.4px solid var(--cmp-ring-brd);
+  border-radius: 50%;
+  background: var(--cmp-flag) center / cover no-repeat;
+}
+
+
+/* ══ hero ═════════════════════════════════════════════════════
+   Layers, back to front: the plate (forest + fisherman, one raster in
+   Figma), the cobweb, the fades in ::after, then the title and the cards. */
+
+.cmp-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* 700 is the mobile frame (21:588). The plate hangs from the bottom edge,
+     so a taller carousel pushes the fisherman down with it rather than
+     under the cards. */
+  min-height: 700px;
+  padding: 62px 16px 0;
+  background: var(--cmp-night);
+}
+
+.cmp-hero__art,
+.cmp-hero__web { position: absolute; z-index: 0; pointer-events: none; }
+
+.cmp-hero__art img,
+.cmp-hero__web img { width: 100%; height: auto; max-width: none; }
+
+/* 21:601: 419 wide, its top 182px down a 700px frame, so its bottom is
+   852 - 700 = 152px below the hero's. */
+.cmp-hero__art { left: calc(50% - 209.5px); bottom: -152px; width: 419px; }
+
+/* 21:602: 456px square, 7.73% left of the frame, 29px above it, at half
+   strength. plus-lighter adds its light to the plate, as in Figma. */
+.cmp-hero__web {
+  z-index: 1;
+  top: -29px;
+  left: -7.73%;
+  width: 456px;
+  opacity: .5;
+  mix-blend-mode: plus-lighter;
+}
+
+/* 21:604 (navy from the top, 443px), 21:603 (black, last 55px of the
+   plate) and 21:605 (navy, last 85px): the art fades into --cmp-bg. */
+.cmp-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(to top, var(--cmp-bg), transparent 85px),
+    linear-gradient(to top, var(--cmp-night), transparent 55px),
+    linear-gradient(to bottom, var(--cmp-bg), transparent 427px);
+}
+
+.cmp-hero__title,
+.cmp-hero > .cmp-cards { position: relative; z-index: 2; }
+
+/* 21:610: 332x98, and the card's top (144) tucks 16px under it (160). */
+.cmp-hero__title { width: 332px; max-width: 100%; margin-bottom: -16px; }
+
+.cmp-hero__title-img { width: 100%; height: auto; aspect-ratio: 768 / 227; }
+
+.cmp-hero > .cmp-cards { width: 100%; }
+
+
+/* ══ How does it work? ════════════════════════════════════════
+   21:591 on mobile, 21:537 on desktop. The digits are decoration; the step
+   titles say the number in words. */
+
+.cmp-how { padding: 32px 0; }
+
+.cmp-how__title {
+  margin-bottom: 32px;
+  padding: 0 16px;
+  color: var(--accent);
+  font-size: 22px;
+  font-weight: var(--fw-xbold);
+  line-height: normal;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.cmp-how__steps { display: grid; gap: 24px; }
+
+.cmp-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 16px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid var(--cmp-blue-line);
+  line-height: normal;
+}
+
+.cmp-step:last-child { padding-bottom: 0; border-bottom: 0; }
+
+.cmp-step__num {
+  flex: none;
+  color: var(--cmp-blue);
+  font-size: 84px;
+  font-weight: var(--fw-black);
+}
+
+.cmp-step__txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+
+/* Figma draws 22px here. --cmp-blue on --cmp-bg is 3.53:1, which is AA
+   only as large text, and 24px is where medium-weight text becomes large. */
+.cmp-step__title { color: var(--cmp-blue); font-size: 24px; font-weight: var(--fw-medium); }
+
+.cmp-step__text { color: var(--cmp-step-text); font-size: 16px; font-weight: var(--fw-regular); }
+
+
+/* ══ footer ═══════════════════════════════════════════════════
+   The shell's footer on the page's own ground (21:548 / 21:598), with
+   Figma's spacing. The header now carries the Halloween logo through
+   brand.logo, so the footer's copy of it is hidden and the plain wordmark
+   Figma draws there (21:550) is painted in its place. */
+
+.tw-ftr { gap: 32px; padding: 40px 24px 32px; background: var(--cmp-bg); }
+
+.tw-ftr__copy { padding-top: 32px; }
+
+.tw-ftr__logo {
+  width: 132px;
+  height: 26px;
+  padding: 0;
+  border-radius: 0;
+  background: url("assets/page/logo-footer.svg") center / contain no-repeat;
+  filter: none;
+}
+
+.tw-ftr__logo img { visibility: hidden; }
+
+
+/* ══ desktop ══════════════════════════════════════════════════ */
+
+@media (min-width: 1024px) {
+
+  /* Same grid as the hero below it, so the logo centres over the cards:
+     21:643 sits at 828..1094 and the active card at 823..1098. */
+  .tw-hdr {
+    max-width: 1440px;
+    margin-inline: auto;
+    padding: 39px 80px 0;
+    display: grid;
+    grid-template-columns: minmax(0, 503fr) minmax(0, 777fr);
+    align-items: start;
+  }
+
+  .tw-hdr__logo { grid-column: 2; justify-self: center; }
+  .tw-hdr__logo img { width: 266px; }
+
+  /* 21:644: 62px down, its right edge 147px in from the 1440 frame's. */
+  .tw-hdr__right { position: absolute; top: 62px; right: 147px; }
+
+  /* 21:534: 652 tall. The cards' column starts where the left arrow does
+     (583 - 80 = 503 of 1280); the active card's top is at 137 and the
+     title's foot 23px above the hero's. */
+  .cmp-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 503fr) minmax(0, 777fr);
+    align-items: start;
+    min-height: 652px;
+    padding: 137px max(80px, calc((100% - 1280px) / 2)) 23px;
+  }
+
+  /* 21:663: 1862 wide at (-175, -121) of the 1440 frame, so its left edge
+     is 895px left of the centre and it moves with the container. Below 1440
+     it shrinks with the viewport (1862 / 1440 = 129.31vw, 895 / 1440 =
+     62.15vw, 121 / 1440 = 8.4vw) so the fisherman keeps his place beside a
+     title that shrinks with the container, instead of walking off the left
+     edge. */
+  .cmp-hero__art {
+    left: calc(50% - min(895px, 62.15vw));
+    top: max(-121px, -8.4vw);
+    bottom: auto;
+    width: min(1862px, 129.31vw);
+  }
+
+  /* 21:667: the top-right corner, 72.01% .. 103.68% of the frame. */
+  .cmp-hero__web { top: -6px; left: 72.01%; width: 31.67%; opacity: 1; }
+
+  /* 21:665: only the fade into the page, 397px. */
+  .cmp-hero::after { background: linear-gradient(to top, var(--cmp-bg), transparent 397px); }
+
+  /* 21:666: 530x296 at x 99 of 1440, i.e. 19px into a 503px column --
+     41.4% of the 1280 container, so it scales with it. */
+  .cmp-hero__title {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: end;
+    width: 105.4%;
+    max-width: none;
+    margin: 0 0 0 3.8%;
+  }
+
+  .cmp-hero__title-img { aspect-ratio: 1376 / 768; }
+
+  /* 21:664: a blurred #00040d ellipse, 431x232, centred a little above the
+     lettering, that keeps it legible over the plate. */
+  .cmp-hero__title::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    left: -6.8%;
+    top: -38.9%;
+    width: 119%;
+    height: 146%;
+    background: radial-gradient(closest-side, var(--cmp-shade) 45%, transparent);
+    pointer-events: none;
+  }
+
+  .cmp-hero > .cmp-cards { grid-column: 2; grid-row: 1; }
+
+  /* 21:537: 1280 wide, title 28px, 40px down to the steps, the footer
+     starting 141px under them. Vertical dividers at the column gaps. */
+  .cmp-how { padding: 0 max(80px, calc((100% - 1280px) / 2)) 141px; }
+
+  .cmp-how__title { margin-bottom: 40px; padding: 0; font-size: 28px; }
+
+  .cmp-how__steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; }
+
+  .cmp-step {
+    gap: 14px;
+    margin: 0;
+    padding: 0 18px;
+    border-bottom: 0;
+  }
+
+  .cmp-step:first-child { padding-left: 0; }
+  .cmp-step:last-child { padding-right: 0; }
+  .cmp-step + .cmp-step { border-left: 2px solid var(--cmp-blue-line); }
+
+  .cmp-step__num { font-size: 104px; }
+  .cmp-step__txt { gap: 14px; }
+  .cmp-step__text { font-size: 18px; }
+
+}
+
+/* The footer turns into its row at the shell's own breakpoint, not ours.
+   21:548: 48 / 120 / 40, and the copyright right-aligned against the
+   payments, as footer-bottom's space-between puts it. These restate the
+   shell's wide values because the mobile rules above outrank its media
+   query by coming later. */
+@media (min-width: 700px) {
+  .tw-ftr { gap: 40px; padding: 48px clamp(24px, 8.33vw, 120px) 40px; }
+  .tw-ftr__copy { padding-top: 0; text-align: right; }
+}

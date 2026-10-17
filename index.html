@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#040412">
+<meta name="theme-color" content="#131e3b"><!-- --cmp-bg, Figma 21:537 -->
 
 <!-- GitHub Pages cannot set response headers, so the policy ships as a meta.
      It names exactly the origins js/platform.js and the shell talk to, and
@@ -50,8 +50,8 @@
 <!-- Static, because a crawler and a link preview read the head before any
      script runs. The <title> is also re-rendered per language by js/i18n.js
      via data-i18n; this is the default-locale copy it starts from. -->
-<title data-i18n="title">Top Win</title>
-<meta name="description" content="">
+<title data-i18n="title">Top Win — Halloween Cards</title>
+<meta name="description" content="Halloween Cards від Top Win: щодня з 23 по 31 жовтня — новий бонус. Відкрийте картку дня та заберіть свій бонус.">
 
 <!-- The brand icon, and it ships on every Top Win landing. Not the wordmark
      in assets/img/logo-topwin.svg: that one is 247x44 of horizontal type and
@@ -72,6 +72,17 @@
      deferred: they belong to the dialog, which is closed at load. -->
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/roboto-cyrillic.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/roboto-latin.woff2" crossorigin>
+
+<!-- The hero plate is the largest paint. The <picture> in <main> is found
+     only once the parser reaches it; preloaded here it starts with the CSS.
+     The media queries are the same two as the <source>s, so exactly one of
+     these two requests is made. -->
+<link rel="preload" as="image" type="image/avif" fetchpriority="high" media="(min-width: 1024px)"
+      imagesrcset="campaign/assets/page/hero-desk-1862.avif 1862w, campaign/assets/page/hero-desk-2144.avif 2144w"
+      imagesizes="min(1862px, 129.31vw)">
+<link rel="preload" as="image" type="image/avif" fetchpriority="high" media="(max-width: 1023.98px)"
+      imagesrcset="campaign/assets/page/hero-mob-419.avif 419w, campaign/assets/page/hero-mob-838.avif 838w, campaign/assets/page/hero-mob-1245.avif 1245w"
+      imagesizes="419px">
 
 <!-- Order matters: reset, then tokens, then the shell, then the campaign.
 
@@ -135,11 +146,71 @@
        CARDS worker owns #cmp-cards (filled by campaign/main.js) and
        campaign/cards.css. Neither edits the other's files. -->
   <section class="cmp-hero">
-    <h1 class="cmp-hero__title" data-i18n="hero.title">Halloween Cards</h1>
+    <!-- The night forest with the fisherman painted into it (Figma 21:663
+         desktop, 21:601 mobile). One raster in the design, so one here: the
+         character is part of the plate, not a separate layer. Decoration. -->
+    <picture class="cmp-hero__art">
+      <source media="(min-width: 1024px)" type="image/avif" sizes="min(1862px, 129.31vw)"
+              srcset="campaign/assets/page/hero-desk-1862.avif 1862w, campaign/assets/page/hero-desk-2144.avif 2144w">
+      <source media="(min-width: 1024px)" type="image/webp" sizes="min(1862px, 129.31vw)"
+              srcset="campaign/assets/page/hero-desk-1862.webp 1862w, campaign/assets/page/hero-desk-2144.webp 2144w">
+      <source type="image/avif" sizes="419px"
+              srcset="campaign/assets/page/hero-mob-419.avif 419w, campaign/assets/page/hero-mob-838.avif 838w, campaign/assets/page/hero-mob-1245.avif 1245w">
+      <img src="campaign/assets/page/hero-mob-838.webp" sizes="419px"
+           srcset="campaign/assets/page/hero-mob-419.webp 419w, campaign/assets/page/hero-mob-838.webp 838w, campaign/assets/page/hero-mob-1245.webp 1245w"
+           alt="" width="1245" height="1991" fetchpriority="high">
+    </picture>
+    <picture class="cmp-hero__web" aria-hidden="true">
+      <source type="image/avif" sizes="456px"
+              srcset="campaign/assets/page/web-456.avif 456w, campaign/assets/page/web-912.avif 912w">
+      <img src="campaign/assets/page/web-456.webp" sizes="456px"
+           srcset="campaign/assets/page/web-456.webp 456w, campaign/assets/page/web-912.webp 912w"
+           alt="" width="2000" height="2000">
+    </picture>
+
+    <!-- The lettering is art, so the heading is an image of it; its alt is
+         the heading's text and follows the language. -->
+    <h1 class="cmp-hero__title">
+      <picture>
+        <source media="(min-width: 1024px)" type="image/avif" sizes="530px"
+                srcset="campaign/assets/page/title-desk-530.avif 530w, campaign/assets/page/title-desk-1060.avif 1060w">
+        <source media="(min-width: 1024px)" type="image/webp" sizes="530px"
+                srcset="campaign/assets/page/title-desk-530.webp 530w, campaign/assets/page/title-desk-1060.webp 1060w">
+        <source type="image/avif" sizes="332px"
+                srcset="campaign/assets/page/title-mob-332.avif 332w, campaign/assets/page/title-mob-664.avif 664w">
+        <img class="cmp-hero__title-img" src="campaign/assets/page/title-mob-664.webp" sizes="332px"
+             srcset="campaign/assets/page/title-mob-332.webp 332w, campaign/assets/page/title-mob-664.webp 664w"
+             alt="Halloween Cards" data-i18n-attr="alt:hero.title" width="768" height="227">
+      </picture>
+    </h1>
     <div class="cmp-cards" id="cmp-cards"></div>
   </section>
-  <section class="cmp-how">
-    <h2 class="cmp-how__title" data-i18n="how.title">ЯК ЦЕ ПРАЦЮЄ?</h2>
+
+  <section class="cmp-how" aria-labelledby="cmp-how-title">
+    <h2 class="cmp-how__title" id="cmp-how-title" data-i18n="how.title">ЯК ЦЕ ПРАЦЮЄ?</h2>
+    <ol class="cmp-how__steps">
+      <li class="cmp-step">
+        <span class="cmp-step__num" aria-hidden="true">1</span>
+        <div class="cmp-step__txt">
+          <h3 class="cmp-step__title" data-i18n="how.1.title">Крок 1</h3>
+          <p class="cmp-step__text" data-i18n="how.1.text">Натисніть кнопку Info та ознайомтеся з умовами, зазначеними на зворотному боці картки.</p>
+        </div>
+      </li>
+      <li class="cmp-step">
+        <span class="cmp-step__num" aria-hidden="true">2</span>
+        <div class="cmp-step__txt">
+          <h3 class="cmp-step__title" data-i18n="how.2.title">Крок 2</h3>
+          <p class="cmp-step__text" data-i18n="how.2.text">Після ознайомлення з умовами натисніть ОТРИМАТИ БОНУС та перейдіть на сторінку депозиту. Внесіть мінімально необхідну суму для активації бонусу та натисніть Deposit.</p>
+        </div>
+      </li>
+      <li class="cmp-step">
+        <span class="cmp-step__num" aria-hidden="true">3</span>
+        <div class="cmp-step__txt">
+          <h3 class="cmp-step__title" data-i18n="how.3.title">Крок 3</h3>
+          <p class="cmp-step__text" data-i18n="how.3.text">Після завершення депозиту бонус буде зараховано на ваш акаунт. Рекомендуємо спочатку використати бонусні кошти, а потім перейти до Free Spins.</p>
+        </div>
+      </li>
+    </ol>
   </section>
 </main>
 

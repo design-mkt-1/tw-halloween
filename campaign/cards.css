@@ -1,1 +1,463 @@
-/* Calendar cards and carousel — owned by the CARDS worker. */
+/* ═══════════════════════════════════════════════════════════════
+   CALENDAR CARDS AND CAROUSEL — the inside of #cmp-cards.
+   Markup is built by campaign/main.js; the page around it (title, art,
+   where #cmp-cards sits) is campaign/main.css.
+
+   Geometry is Figma's own numbers times --k, the card's scale against the
+   275x400 desktop card (21:669): 1 on desktop, 0.8 on a phone (21:712,
+   220x320). Font sizes are separate px values per breakpoint, so text stays
+   real px and browser zoom works.
+
+   Motion (built with the `animate` skill, template rules quoted):
+     * one curve, --ease-out; entry slower than exit -- the flip to the back
+       takes 420ms, the return 300ms; the slide 300ms
+     * transform and opacity only
+     * no filter or box-shadow on a node that rotates in 3D: the shadow is a
+       filter on the flat <svg> inside a face, never on a face or __inner
+     * prefers-reduced-motion degrades: the slide is an instant move, the
+       flip a 200ms crossfade, press feedback stays
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ══ card palette ══════════════════════════════════════════════
+   DEVIATION (owner, 2026-10-17; docs/BRIEF.md): the Halloween card colours
+   are not in css/tokens.css. Defined once, here; nothing below names a hex. */
+:root {
+  --cmp-card-today:   #006aff;   /* 21:670 card fill, Open */
+  --cmp-card-past:    #303845;   /* 21:685 card fill, Expired */
+  --cmp-card-soon:    #1e3060;   /* 21:700 card fill, Opens tomorrow */
+  --cmp-card-shade:   #000000;   /* 21:670 bottom gradient, 0 -> 100% black */
+  --cmp-card-drop:    rgba(0, 0, 0, .8);    /* 21:669 drop shadow */
+  /* Pill: Figma draws today's pill #007bff (21:674), 3.98:1 under white
+     9.6-12px text. The tomorrow pill's own blue (21:704) passes at 6.64:1
+     and is used for both. */
+  --cmp-pill-today:   #0155cb;   /* 21:704 */
+  --cmp-pill-past:    #3b404a;   /* 21:689 */
+  --cmp-gold:         #ffae00;   /* 21:681 offer lines, Open */
+  --cmp-grey-ink:     #a6adb8;   /* 21:696 offer text, Expired (5.23:1) */
+  --cmp-btn-past:     #292e36;   /* 21:693 */
+  --cmp-btn-soon:     #244066;   /* 21:708 */
+  --cmp-cta-from:     #ff8c00;   /* 21:678 GET BONUS gradient start; end is --accent */
+  --cmp-cta-glow:     rgba(255, 69, 0, .33);  /* 21:678 drop shadow */
+  --cmp-cta-rim:      rgba(255, 255, 255, .25); /* 21:678 inner top highlight */
+  --cmp-arrow:        #007bff;   /* 21:636 / 21:637 arrows (3.98:1 icon, AA non-text) */
+  --cmp-arrow-drop:   rgba(0, 0, 0, .8);    /* 21:636 */
+  --cmp-tick:         #60a5fa;   /* 21:640 */
+  --cmp-tick-on:      #3b82f6;   /* 21:639 */
+}
+
+/* ══ carousel ══════════════════════════════════════════════════ */
+.cmp-cards {
+  --k: 1;
+  --card-w: calc(275px * var(--k));
+  --card-h: calc(400px * var(--k));
+  /* neighbour placement, measured off 21:534 */
+  --nb-x: 218px;
+  --nb-y: 16px;
+  --nb-rot: 19deg;
+  --nb-scale: .8;
+  --arrow: 64px;
+  --slide: 300ms;
+
+  position: relative;
+  width: 100%;
+  max-width: 754px;            /* arrow edge to arrow edge in 21:534 */
+  margin-inline: auto;
+  /* Neighbours hang past the edges on a phone; clip sideways only, so the
+     card shadows above and below are not cut. */
+  overflow-x: clip;
+  overflow-clip-margin: 0;
+  padding-block: 8px 0;
+}
+
+.cmp-car__stage {
+  position: relative;
+  height: calc(var(--card-h) + 20px);
+  touch-action: pan-y;
+  perspective: 1400px;
+}
+
+.cmp-card {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: var(--card-w);
+  height: var(--card-h);
+  margin-left: calc(var(--card-w) / -2);
+  transition:
+    transform var(--slide) var(--ease-out),
+    opacity var(--slide) var(--ease-out),
+    visibility 0s linear var(--slide);
+  visibility: hidden;
+  opacity: 0;
+  z-index: 0;
+  perspective: 1400px;
+}
+
+.cmp-card[data-pos="0"] {
+  visibility: visible;
+  opacity: 1;
+  z-index: 3;
+  transition-delay: 0s;
+}
+.cmp-card[data-pos="-1"],
+.cmp-card[data-pos="1"] {
+  visibility: visible;
+  opacity: .75;
+  z-index: 2;
+  transition-delay: 0s;
+}
+/* Figma draws the soon card at half opacity (21:699). */
+.cmp-card--next[data-pos="-1"],
+.cmp-card--next[data-pos="1"] { opacity: .5; }
+
+.cmp-card[data-pos="-1"] {
+  transform: translate(calc(var(--nb-x) * -1), var(--nb-y))
+             rotate(calc(var(--nb-rot) * -1)) scale(var(--nb-scale));
+}
+.cmp-card[data-pos="1"] {
+  transform: translate(var(--nb-x), var(--nb-y)) rotate(var(--nb-rot)) scale(var(--nb-scale));
+}
+.cmp-card[data-pos="-2"] {
+  transform: translate(calc(var(--nb-x) * -1.6), var(--nb-y)) rotate(calc(var(--nb-rot) * -1.4)) scale(.6);
+}
+.cmp-card[data-pos="2"] {
+  transform: translate(calc(var(--nb-x) * 1.6), var(--nb-y)) rotate(calc(var(--nb-rot) * 1.4)) scale(.6);
+}
+
+.cmp-car__arrow {
+  position: absolute;
+  top: calc(8px + var(--card-h) / 2 - var(--arrow) / 2 + 26px * var(--k));
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: var(--arrow);
+  height: var(--arrow);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: var(--cmp-arrow);
+  color: var(--text);
+  box-shadow: 0 4px 25px var(--cmp-arrow-drop);
+  cursor: pointer;
+  transition: transform 140ms var(--ease-out), opacity 200ms var(--ease-out);
+}
+.cmp-car__arrow svg { width: 16px; height: 16px; }
+.cmp-car__arrow--prev { left: 0; }
+.cmp-car__arrow--prev svg { transform: scaleX(-1); }
+.cmp-car__arrow--next { right: 0; }
+.cmp-car__arrow:active { transform: scale(.94); }
+.cmp-car__arrow[aria-disabled="true"] { opacity: .35; cursor: default; }
+.cmp-car__arrow[aria-disabled="true"]:active { transform: none; }
+.cmp-car__arrow:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+}
+
+/* 21:638: 4px bars, the current one 40px. Each is a 24px-tall button; the
+   bar itself is the ::before. */
+.cmp-car__bar {
+  display: flex;
+  justify-content: center;
+  padding: 0 16px;
+}
+.cmp-car__tick {
+  display: grid;
+  place-items: center;
+  min-width: 24px;               /* WCAG 2.5.8 target; Figma's bars are 4px apart */
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.cmp-car__tick::before {
+  content: "";
+  width: 8px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--cmp-tick);
+  opacity: .45;
+  transition: width var(--slide) var(--ease-out), opacity var(--slide) var(--ease-out);
+}
+.cmp-car__tick.is-on::before { width: 40px; background: var(--cmp-tick-on); opacity: 1; }
+.cmp-car__tick:focus-visible { outline: 2px solid var(--text); outline-offset: 1px; border-radius: 4px; }
+
+/* ══ one card ══════════════════════════════════════════════════ */
+.cmp-card__inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 300ms var(--ease-out);
+}
+.cmp-card.is-flipped .cmp-card__inner {
+  transform: rotateY(180deg);
+  transition-duration: 420ms;
+}
+
+.cmp-card__face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  color: var(--text);
+  font-family: var(--font);
+  text-align: center;
+}
+.cmp-card__back { transform: rotateY(180deg); }
+
+/* The silhouette carries the colour and the shadow. It never rotates on its
+   own -- its face does -- so the filter does not flatten the 3D flip. */
+.cmp-card__shape {
+  position: absolute;
+  left: 0;
+  top: calc(27px * var(--k));
+  width: 100%;
+  height: calc(343px * var(--k));
+  fill: var(--cmp-card-fill, var(--cmp-card-today));
+  filter: drop-shadow(0 8px 25px var(--cmp-card-drop));
+}
+.cmp-card__shape .cmp-card__fade { fill: url(#cmp-card-fade); }
+.cmp-car__defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.cmp-car__defs stop { stop-color: var(--cmp-card-shade); }
+.cmp-card--past { --cmp-card-fill: var(--cmp-card-past); }
+.cmp-card--next { --cmp-card-fill: var(--cmp-card-soon); }
+
+.cmp-card__label {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: calc(26px * var(--k));
+  transform: translateX(-50%);
+  /* The UA label is the longest ("СЬОГОДНІШНІЙ БОНУС • 25 ЖОВТНЯ 2026"):
+     the pill may overhang the card a little, then wraps to two lines rather
+     than cut the date. */
+  width: max-content;
+  max-width: calc(100% + 16px);
+  margin: 0;
+  padding: 4px 12px;
+  border-radius: 10px;
+  background: var(--cmp-pill-today);
+  font-size: 12px;
+  font-weight: var(--fw-bold);
+  font-stretch: var(--font-stretch-tight);
+  line-height: 1.25;
+  letter-spacing: .02em;
+  text-wrap: balance;
+}
+.cmp-card--past .cmp-card__label { background: var(--cmp-pill-past); color: var(--cmp-grey-ink); }
+
+.cmp-card__ball,
+.cmp-card__lock {
+  position: absolute;
+  pointer-events: none;
+}
+.cmp-card__ball img,
+.cmp-card__lock img { display: block; width: 100%; height: 100%; }
+/* 21:683 -- the ball art is a wide transparent frame, wider than the card */
+.cmp-card__ball {
+  left: calc(-83px * var(--k));
+  top: calc(36px * var(--k));
+  width: calc(442.5px * var(--k));
+  height: calc(247px * var(--k));
+}
+/* 21:711, scaled from the 220 card to the 275 one */
+.cmp-card__lock {
+  left: calc(73px * var(--k));
+  top: calc(126px * var(--k));
+  width: calc(129px * var(--k));
+  height: calc(231px * var(--k));
+}
+.cmp-card--next .cmp-card__ball { opacity: .85; }
+
+.cmp-card__offer {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  /* Anchored to the button, not the ball: a line that wraps ("Free Bet +
+     Cashback 20%" on a phone) grows the block upward over the ball's
+     shadow instead of under GET BONUS. 21:681-21:682 end 4px above it. */
+  bottom: calc(73px * var(--k));
+  font-weight: var(--fw-bold);
+}
+.cmp-card__offer p { margin: 0; }
+.cmp-card__line {
+  color: var(--cmp-gold);
+  font-size: 18px;
+  line-height: 1.2;
+  letter-spacing: .2em;
+}
+.cmp-card__line.is-long { letter-spacing: .06em; }
+.cmp-card__amount {
+  font-size: 34px;
+  line-height: 1.12;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.cmp-card--past .cmp-card__line,
+.cmp-card--past .cmp-card__amount { color: var(--cmp-grey-ink); }
+
+/* Info: a small pill in the empty corner the slanted top leaves, above the
+   ball's right edge. The pseudo-element widens the touch target to 44px. */
+.cmp-card__info {
+  position: absolute;
+  z-index: 2;
+  right: calc(8px * var(--k));
+  top: calc(64px * var(--k));
+  min-width: 52px;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--glass-brd);
+  border-radius: var(--r-pill);
+  background: var(--cmp-pill-today);
+  color: var(--text);
+  font: var(--fw-bold) 14px/1 var(--font);
+  cursor: pointer;
+  transition: transform 140ms var(--ease-out);
+}
+.cmp-card__info::after {
+  content: "";
+  position: absolute;
+  inset: -8px -4px;
+}
+.cmp-card--past .cmp-card__info { background: var(--cmp-pill-past); color: var(--cmp-grey-ink); }
+.cmp-card__info:active { transform: scale(.94); }
+
+/* GET BONUS / EXPIRED / COMING SOON / Back -- one slot, 21:678 */
+.cmp-card__btn {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: calc(331px * var(--k));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(218px * var(--k));
+  height: calc(52px * var(--k));
+  margin-left: calc(-109px * var(--k));
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--r-pill);
+  font: var(--fw-semi) 22px/1 var(--font);
+  letter-spacing: -.01em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.cmp-card--past .cmp-card__btn { background: var(--cmp-btn-past); color: var(--cmp-grey-ink); }
+.cmp-card--next .cmp-card__btn { background: var(--cmp-btn-soon); color: var(--text); }
+
+/* Ink is --accent-ink, not Figma's white: white on the #ff8c00 end is
+   2.33:1. Dark ink holds 4.79:1 or better across the whole gradient. */
+.cmp-card__cta {
+  background: linear-gradient(to right, var(--cmp-cta-from), var(--accent));
+  color: var(--accent-ink);
+  box-shadow: 0 8px 12px var(--cmp-cta-glow), inset 0 1px 0 var(--cmp-cta-rim);
+  transition: transform 140ms var(--ease-out);
+}
+.cmp-card__cta[href] { cursor: pointer; }
+.cmp-card__cta:active { transform: scale(.97); }
+
+/* ── the back ── */
+.cmp-card__terms {
+  position: absolute;
+  left: calc(26px * var(--k));
+  right: calc(30px * var(--k));
+  top: calc(80px * var(--k));
+  bottom: calc(84px * var(--k));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  font-size: 16px;
+  font-weight: var(--fw-medium);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.cmp-card--past .cmp-card__terms { color: var(--cmp-grey-ink); }
+
+.cmp-card__backbtn {
+  background: var(--surface-sunken);
+  color: var(--text);
+  border: 1px solid var(--glass-brd);
+  cursor: pointer;
+  transition: transform 140ms var(--ease-out);
+}
+.cmp-card__backbtn:active { transform: scale(.97); }
+
+.cmp-card__info:focus-visible,
+.cmp-card__btn:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+}
+
+/* ══ phone, 21:587 ═════════════════════════════════════════════ */
+@media (max-width: 767px) {
+  .cmp-cards {
+    --k: .8;
+    --nb-x: 104px;
+    --nb-y: 85px;
+    --nb-rot: 18deg;
+    --nb-scale: .7;
+    --arrow: 44px;
+  }
+  /* The hero pads 16px and clips at the screen edge itself (main.css), so
+     the neighbours may bleed to the edge as in 21:606. */
+  .cmp-cards { overflow-x: visible; }
+  /* The neighbours drop 85px in 21:606; the stage grows to keep them. */
+  .cmp-car__stage { height: calc(var(--card-h) + 52px); }
+  /* The pager sits BELOW the fisherman painted into the hero plate, which
+     hangs from the hero's bottom edge: 21:611 is at y669, the cards at y144
+     (21:606), so the 4px bar's top is 525px into this box and its 24px
+     button starts 10px above that. Under 364px the title above shrinks
+     (main.css: 332px wide, max 100% of a 16px-padded hero, 768:227) and
+     lifts this box; the last term puts the same height back so the bar
+     stays at y669 of the hero. */
+  .cmp-car__bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(515px + (332px - min(332px, 100vw - 32px)) * 227 / 768);
+  }
+  .cmp-cards { height: calc(539px + (332px - min(332px, 100vw - 32px)) * 227 / 768); }
+  /* 21:587 draws no arrows. They stay in the tab order and show only while
+     the keyboard is inside the carousel. */
+  .cmp-car__arrow,
+  .cmp-car__arrow[aria-disabled="true"] {
+    top: calc(8px + var(--card-h) / 2 - var(--arrow) / 2);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .cmp-cards:has(:focus-visible) .cmp-car__arrow { opacity: 1; pointer-events: auto; }
+  .cmp-cards:has(:focus-visible) .cmp-car__arrow[aria-disabled="true"] { opacity: .35; }
+  .cmp-car__arrow--prev { left: 8px; }
+  .cmp-car__arrow--next { right: 8px; }
+
+  .cmp-card__label { font-size: 11px; padding: 3px 10px; }
+  .cmp-card__line { font-size: 16px; }
+  .cmp-card__amount { font-size: 30px; }
+  .cmp-card__btn { font-size: 18px; }
+  .cmp-card__terms { font-size: 14px; }
+  .cmp-card__info { font-size: 13px; height: 26px; }
+}
+
+/* ══ reduced motion ════════════════════════════════════════════
+   Degrade, never remove: the slide jumps, the flip crossfades, the press
+   feedback above is untouched. */
+@media (prefers-reduced-motion: reduce) {
+  .cmp-card,
+  .cmp-car__tick::before { transition: none; }
+
+  .cmp-card__inner,
+  .cmp-card.is-flipped .cmp-card__inner {
+    transform: none;
+    transition: none;
+  }
+  .cmp-card__back { transform: none; }
+  .cmp-card__face {
+    backface-visibility: visible;
+    -webkit-backface-visibility: visible;
+    transition: opacity 200ms var(--ease-out);
+  }
+  .cmp-card__back,
+  .cmp-card.is-flipped .cmp-card__front { opacity: 0; }
+  .cmp-card.is-flipped .cmp-card__back { opacity: 1; }
+}
