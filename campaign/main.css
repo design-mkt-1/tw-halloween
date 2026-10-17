@@ -58,58 +58,19 @@
    ═══════════════════════════════════════════════════════════════ */
 
 
-/* ══ demo mechanic — delete all of this ═══════════════════════ */
-
-/* The sticky-footer pattern for mode A: the page is at least the viewport
-   tall, and #tw-main takes whatever the two bars leave. Delete it if your
-   campaign is taller than the screen anyway, and delete the whole block if
-   you switch to css/stage.css, which does this and more. */
-body {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  background: var(--surface);
+/* ══ campaign palette ══════════════════════════════════════════
+   DEVIATION (owner, 2026-10-17; docs/BRIEF.md): the Halloween design uses
+   colours css/tokens.css does not have. They are defined ONCE, here, sampled
+   from Figma 21:533, and every rule below reaches them by name. No hex or
+   rgb() anywhere else in campaign/ -- campaign/cards.css keeps its own
+   card-only block the same way. */
+:root {
+  --cmp-bg:        #131e3b;   /* page ground below the hero */
+  --cmp-blue:      #006aff;   /* step digits, step titles, today card */
+  --cmp-blue-hi:   #007bff;   /* carousel arrows, date pill */
+  --cmp-blue-deep: #012b67;   /* today card, bottom of its gradient */
+  --cmp-blue-line: #09449d;   /* step dividers */
+  --cmp-cta-hi:    #ff8301;   /* GET BONUS gradient, top; bottom is --accent */
 }
 
-#tw-main { flex: 1 0 auto; display: flex; }
-
-.cmp-demo {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 28px;
-  padding: 48px 24px;
-  text-align: center;
-}
-
-.cmp-demo__lead {
-  max-width: 24rem;
-  color: var(--text);
-  font-family: var(--font);
-  font-size: 20px;
-  font-weight: var(--fw-medium);
-  line-height: 1.35;
-}
-
-.cmp-demo__cta {
-  min-height: 56px;
-  padding: 0 32px;
-  border-radius: var(--r-md);
-  background: var(--accent);
-  color: var(--accent-ink);
-  font-family: var(--font);
-  font-size: 18px;
-  font-weight: var(--fw-black);
-  letter-spacing: .02em;
-  box-shadow: var(--glow-accent);
-  transition: scale 140ms var(--ease-out), background-color 140ms var(--ease-out);
-}
-
-.cmp-demo__cta:active { scale: .97; background: var(--accent-press); }
-
-.cmp-demo__cta:focus-visible {
-  outline: 2px solid var(--text);
-  outline-offset: 3px;
-}
+/* ══ page ═════════════════════════════════════════════════════ */

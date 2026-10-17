@@ -27,3 +27,6 @@ dist/
 .DS_Store
 Thumbs.db
 *.log
+
+# Scratch for agents: notes, screenshots, specs.
+out/
