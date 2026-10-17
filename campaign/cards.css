@@ -10,11 +10,14 @@
 
    Motion (built with the `animate` skill, template rules quoted):
      * one curve, --ease-out; entry slower than exit -- the flip to the back
-       takes 420ms, the return 300ms; the slide 300ms
+       takes 420ms, the return 300ms; the slide 300ms, 340ms on a phone
+     * the slide follows the finger on touch (main.js § swipe); CSS
+       transitions retarget, so a new swipe or arrow never waits for the old
      * transform and opacity only
      * no filter or box-shadow on a node that rotates in 3D: the shadow is a
        filter on the flat <svg> inside a face, never on a face or __inner
-     * prefers-reduced-motion degrades: the slide is an instant move, the
+     * prefers-reduced-motion degrades: the drag still follows the finger
+       (direct manipulation, not decoration), the snap is an instant move, the
        flip a 200ms crossfade, press feedback stays
    ═══════════════════════════════════════════════════════════════ */
 
@@ -62,10 +65,9 @@
   width: 100%;
   max-width: 754px;            /* arrow edge to arrow edge in 21:534 */
   margin-inline: auto;
-  /* Neighbours hang past the edges on a phone; clip sideways only, so the
-     card shadows above and below are not cut. */
-  overflow-x: clip;
-  overflow-clip-margin: 0;
+  /* No clip here: a clip at this box's edge cut the left neighbour and its
+     shadow on a straight line over the hero art (owner, 2026-10-17). The
+     hero clips at the screen edge itself (main.css .cmp-hero). */
   padding-block: 8px 0;
 }
 
@@ -76,53 +78,45 @@
   perspective: 1400px;
 }
 
+/* One continuous position per card, --q = --p + --drag, instead of five
+   fixed slots: main.js sets --p (index minus the active index) on each card
+   and --drag (the finger's travel in card widths) on the stage, so a card
+   follows the finger and every in-between pose exists. --q is clamped to
+   -2..2; past that a card is fully transparent. |q| is max(q, -q).
+     q = 0      centre, Figma 21:534
+     q = +-1    neighbour: --nb-x / --nb-y / --nb-rot / --nb-scale, opacity --nb-op
+     q = +-2    off-stage, opacity 0, so a card entering slides in from here */
 .cmp-card {
+  --p: 0;
+  --q: clamp(-2, var(--p) + var(--drag, 0), 2);
+  --aq: max(var(--q), -1 * var(--q));
+  --nb-op: .75;
   position: absolute;
   left: 50%;
   top: 0;
   width: var(--card-w);
   height: var(--card-h);
   margin-left: calc(var(--card-w) / -2);
+  transform:
+    translate(calc(var(--q) * var(--nb-x)), calc(min(var(--aq), 1) * var(--nb-y)))
+    rotate(calc(var(--q) * var(--nb-rot)))
+    scale(calc(1 - var(--aq) * (1 - var(--nb-scale))));
+  opacity: min(1 - var(--aq) * (1 - var(--nb-op)), (2 - var(--aq)) * var(--nb-op));
   transition:
     transform var(--slide) var(--ease-out),
-    opacity var(--slide) var(--ease-out),
-    visibility 0s linear var(--slide);
-  visibility: hidden;
-  opacity: 0;
+    opacity var(--slide) var(--ease-out);
   z-index: 0;
   perspective: 1400px;
 }
-
-.cmp-card[data-pos="0"] {
-  visibility: visible;
-  opacity: 1;
-  z-index: 3;
-  transition-delay: 0s;
-}
-.cmp-card[data-pos="-1"],
-.cmp-card[data-pos="1"] {
-  visibility: visible;
-  opacity: .75;
-  z-index: 2;
-  transition-delay: 0s;
-}
 /* Figma draws the soon card at half opacity (21:699). */
-.cmp-card--next[data-pos="-1"],
-.cmp-card--next[data-pos="1"] { opacity: .5; }
-
-.cmp-card[data-pos="-1"] {
-  transform: translate(calc(var(--nb-x) * -1), var(--nb-y))
-             rotate(calc(var(--nb-rot) * -1)) scale(var(--nb-scale));
-}
-.cmp-card[data-pos="1"] {
-  transform: translate(var(--nb-x), var(--nb-y)) rotate(var(--nb-rot)) scale(var(--nb-scale));
-}
-.cmp-card[data-pos="-2"] {
-  transform: translate(calc(var(--nb-x) * -1.6), var(--nb-y)) rotate(calc(var(--nb-rot) * -1.4)) scale(.6);
-}
-.cmp-card[data-pos="2"] {
-  transform: translate(calc(var(--nb-x) * 1.6), var(--nb-y)) rotate(calc(var(--nb-rot) * 1.4)) scale(.6);
-}
+.cmp-card--next { --nb-op: .5; }
+/* data-pos (p rounded and clamped to -2..2) only orders the stack. */
+.cmp-card[data-pos="0"] { z-index: 3; }
+.cmp-card[data-pos="-1"],
+.cmp-card[data-pos="1"] { z-index: 2; }
+/* While a finger drags, the cards follow it 1:1; on release the transition
+   comes back and carries them from wherever they are to the snapped pose. */
+.cmp-car__stage.is-dragging .cmp-card { transition: none; }
 
 .cmp-car__arrow {
   position: absolute;
@@ -398,10 +392,10 @@
     --nb-rot: 18deg;
     --nb-scale: .7;
     --arrow: 44px;
+    /* A phone flick covers more of the screen: a little longer reads as a
+       glide, not a jump. */
+    --slide: 340ms;
   }
-  /* The hero pads 16px and clips at the screen edge itself (main.css), so
-     the neighbours may bleed to the edge as in 21:606. */
-  .cmp-cards { overflow-x: visible; }
   /* The neighbours drop 85px in 21:606; the stage grows to keep them. */
   .cmp-car__stage { height: calc(var(--card-h) + 52px); }
   /* The pager sits BELOW the fisherman painted into the hero plate, which

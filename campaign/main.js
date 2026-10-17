@@ -29,8 +29,9 @@
    show no terms and have no Info.
 
    ── Carousel ─────────────────────────────────────────────────
-   Every card sits in the same spot; data-pos (-2..2) on each card places it
-   (cards.css). Only pos 0 is interactive: the rest are inert and
+   Every card sits in the same spot; --p (its index minus the active one)
+   places it and data-pos (-2..2) stacks it (cards.css). On touch the cards
+   follow the finger (§ swipe). Only pos 0 is interactive: the rest are inert and
    aria-hidden. Arrows, swipe, and ArrowLeft/ArrowRight while focus is
    inside move one card; the pager under the cards jumps to any day. The
    ends do not wrap: an end arrow turns
@@ -48,6 +49,21 @@
   'use strict';
 
   var LOCALE = { ua: 'uk-UA', ru: 'ru-RU', en: 'en-US' };
+
+  /* ── wide screens ─────────────────────────────────────────────
+     Figma "Desktop - 1920" (27:1072) is the 1440 frame (21:533) times
+     1920/1440, nothing moved: above 1440 the whole page grows with the
+     window. The owner wants the same on 2560x1440 -- the page fills the
+     width and scrolls down to the payment methods. CSS zoom on <html>
+     scales layout and text together, so browser zoom still works on top.
+     It is set here, not in CSS, because calc() cannot yet divide 100vw by
+     a length portably. */
+  function fit() {
+    var z = window.innerWidth / 1440;
+    document.documentElement.style.zoom = z > 1 ? String(z) : '';
+  }
+  fit();
+  window.addEventListener('resize', fit);
 
   /* The card's silhouette, Figma 21:670 (275x343). Drawn as SVG so the
      slanted top and the round bottom-left corner scale with the card; the
@@ -277,10 +293,21 @@
       next.setAttribute('aria-label', TW.t('card.next'));
     }
 
-    function place() {
+    /* data-pos only stacks the cards (cards.css); shift is the drag, so the
+       card nearest the centre comes to the front while the finger moves. */
+    function stack(shift) {
       cards.forEach(function (c, i) {
-        var pos = Math.max(-2, Math.min(2, i - active));
+        var pos = Math.max(-2, Math.min(2, Math.round(i - active - shift)));
         c.card.setAttribute('data-pos', String(pos));
+      });
+    }
+
+    function place() {
+      stack(0);
+      cards.forEach(function (c, i) {
+        var pos = i - active;
+        /* --p drives the pose (cards.css). */
+        c.card.style.setProperty('--p', String(pos));
         var off = pos !== 0;
         c.card.inert = off;
         if (off) c.card.setAttribute('aria-hidden', 'true');
@@ -310,20 +337,65 @@
       else if (e.key === 'ArrowRight') { go(1); e.preventDefault(); }
     });
 
-    /* Swipe: a horizontal drag of 40px or more, decided on release.
-       touch-action: pan-y in cards.css leaves vertical scrolling to the page. */
-    var x0 = null, y0 = 0;
+    /* Swipe: the cards follow the finger, then snap. --drag on the stage is
+       the travel in neighbour steps (px / --nb-x); cards.css adds it to each
+       card's --p. On release it rounds to the nearest card, and a quick flick
+       (over 0.3 px/ms) moves one card even when the travel is short.
+       Past either end the drag gives a third as much, a rubber band.
+       The drag only starts once the move is clearly sideways (8px, more x
+       than y); until then a tap is a tap and the buttons inside get their
+       click. touch-action: pan-y in cards.css leaves vertical scrolling to
+       the page, which then sends pointercancel. Mouse uses the arrows. */
+    var drag = null;
     stage.addEventListener('pointerdown', function (e) {
-      if (e.pointerType === 'mouse') return;
-      x0 = e.clientX; y0 = e.clientY;
+      if (e.pointerType === 'mouse' || drag) return;
+      drag = { id: e.pointerId, x0: e.clientX, y0: e.clientY, on: false,
+               step: parseFloat(getComputedStyle(root).getPropertyValue('--nb-x')) || 1,
+               t: e.timeStamp, x: e.clientX, v: 0 };
     });
-    stage.addEventListener('pointerup', function (e) {
-      if (x0 === null) return;
-      var dx = e.clientX - x0, dy = e.clientY - y0;
-      x0 = null;
-      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1);
+    stage.addEventListener('pointermove', function (e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      var dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+      if (!drag.on) {
+        if (Math.abs(dy) > 8 && Math.abs(dy) >= Math.abs(dx)) { drag = null; return; }
+        if (Math.abs(dx) < 8) return;
+        drag.on = true;
+        /* From here the gesture is the carousel's: capture keeps the moves
+           coming outside the stage, and the click after release lands on
+           the stage instead of on a button under the finger. */
+        stage.setPointerCapture(e.pointerId);
+        stage.classList.add('is-dragging');
+      }
+      var dt = e.timeStamp - drag.t;
+      if (dt > 0) drag.v = (e.clientX - drag.x) / dt;
+      drag.t = e.timeStamp; drag.x = e.clientX;
+      /* clientX is in screen px; under the wide-screen zoom a CSS px is
+         currentCSSZoom of them. */
+      var f = -dx / (drag.step * (root.currentCSSZoom || 1));
+      var lo = -active, hi = cards.length - 1 - active;
+      if (f < lo) f = lo + (f - lo) / 3;
+      else if (f > hi) f = hi + (f - hi) / 3;
+      drag.f = f;
+      stage.style.setProperty('--drag', String(-f));
+      stack(f);
     });
-    stage.addEventListener('pointercancel', function () { x0 = null; });
+    function release(e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      var d = drag;
+      drag = null;
+      if (!d.on) return;
+      var steps = Math.round(d.f || 0);
+      /* A flick that was still moving at release, recently. */
+      if (e.timeStamp - d.t < 100 && Math.abs(d.v) > 0.3 && steps === 0) steps = d.v < 0 ? 1 : -1;
+      /* Same frame: the transition comes back and --drag goes to 0 while --p
+         moves, so each card animates from where the finger left it. */
+      stage.classList.remove('is-dragging');
+      stage.style.removeProperty('--drag');
+      if (e.type === 'pointerup') go(steps);
+      stack(0);   // go() returns early at an end or on 0 steps
+    }
+    stage.addEventListener('pointerup', release);
+    stage.addEventListener('pointercancel', release);
 
     render();
     place();
