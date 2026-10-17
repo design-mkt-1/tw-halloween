@@ -89,6 +89,7 @@
 <!-- <link rel="stylesheet" href="css/stage.css"> -->
 <!-- <link rel="stylesheet" href="css/fold.css"> -->
 <link rel="stylesheet" href="campaign/main.css">
+<link rel="stylesheet" href="campaign/cards.css">
 
 <noscript><style>
   /* The chrome and the dialog are injected by js/shell.js, so with scripting
@@ -130,9 +131,15 @@
      the right words paint before any script runs. -->
 
 <main id="tw-main">
-  <section class="cmp-demo">
-    <p class="cmp-demo__lead" data-i18n="demo.lead">Демо-механіка.</p>
-    <button class="cmp-demo__cta" type="button" data-i18n="demo.cta">ОТРИМАТИ БОНУС</button>
+  <!-- PAGE worker owns this block's markup and campaign/main.css.
+       CARDS worker owns #cmp-cards (filled by campaign/main.js) and
+       campaign/cards.css. Neither edits the other's files. -->
+  <section class="cmp-hero">
+    <h1 class="cmp-hero__title" data-i18n="hero.title">Halloween Cards</h1>
+    <div class="cmp-cards" id="cmp-cards"></div>
+  </section>
+  <section class="cmp-how">
+    <h2 class="cmp-how__title" data-i18n="how.title">ЯК ЦЕ ПРАЦЮЄ?</h2>
   </section>
 </main>
 
