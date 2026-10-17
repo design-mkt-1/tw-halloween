@@ -72,7 +72,6 @@
   --cmp-blue-line: #09449d;   /* step dividers */
   --cmp-cta-hi:    #ff8301;   /* GET BONUS gradient, top; bottom is --accent */
   --cmp-night:     #000100;   /* hero ground under the art, bg 21:600 */
-  --cmp-shade:     #00040d;   /* blurred ellipse behind the title, 21:664 */
   --cmp-step-text: #a8c4f0;   /* "How does it work?" body copy, 21:541 */
   --cmp-ring-from: #1e40af;   /* language button ring, 21:645 gradient start */
   --cmp-ring-to:   #3b82f6;   /* language button ring, 21:645 gradient end */
@@ -141,8 +140,9 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
 
 
 /* ══ hero ═════════════════════════════════════════════════════
-   Layers, back to front: the plate (forest + fisherman, one raster in
-   Figma), the cobweb, the fades in ::after, then the title and the cards. */
+   Layers, back to front: the frame (forest, fisherman, cobweb -- and on
+   desktop the title -- one raster), the fades in ::after, then the title
+   and the cards. */
 
 .cmp-hero {
   position: relative;
@@ -159,25 +159,23 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
   background: var(--cmp-night);
 }
 
-.cmp-hero__art,
-.cmp-hero__web { position: absolute; z-index: 0; pointer-events: none; }
+.cmp-hero__art { position: absolute; z-index: 0; pointer-events: none; }
 
-.cmp-hero__art img,
-.cmp-hero__web img { width: 100%; height: auto; max-width: none; }
+.cmp-hero__art img { width: 100%; height: auto; max-width: none; }
 
-/* 21:601: 419 wide, its top 182px down a 700px frame, so its bottom is
-   852 - 700 = 152px below the hero's. */
-.cmp-hero__art { left: calc(50% - 209.5px); bottom: -152px; width: 419px; }
-
-/* 21:602: 456px square, 7.73% left of the frame, 29px above it, at half
-   strength. plus-lighter adds its light to the plate, as in Figma. */
-.cmp-hero__web {
-  z-index: 1;
-  top: -29px;
-  left: -7.73%;
-  width: 456px;
-  opacity: .5;
-  mix-blend-mode: plus-lighter;
+/* The 375x700 frame (21:600), hung from the hero's bottom so a taller
+   carousel pushes the fisherman down rather than under the cards. Phones up
+   to 430 scale it with the width (the top it loses is empty sky); past 430
+   it stops growing -- at 560 the fisherman rose under the cards -- and its
+   side edges fade into the ground instead of showing as a strip. */
+.cmp-hero__art {
+  left: calc(50% - clamp(375px, 100%, 430px) / 2);
+  bottom: 0;
+  width: clamp(375px, 100%, 430px);
+}
+.cmp-hero__art img { aspect-ratio: 1500 / 2800; }
+@media (min-width: 431px) and (max-width: 1023.98px) {
+  .cmp-hero__art { mask-image: linear-gradient(to right, transparent, #000 18%, #000 82%, transparent); }
 }
 
 /* 21:604 (navy from the top, 443px), 21:603 (black, last 55px of the
@@ -306,24 +304,18 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
     padding: 137px max(80px, calc((100% - 1280px) / 2)) 23px;
   }
 
-  /* 21:663: 1862 wide at (-175, -121) of the 1440 frame, so its left edge
-     is 895px left of the centre and it moves with the container. Below 1440
-     it shrinks with the viewport (1862 / 1440 = 129.31vw, 895 / 1440 =
-     62.15vw, 121 / 1440 = 8.4vw) so the fisherman keeps his place beside a
-     title that shrinks with the container, instead of walking off the left
-     edge. */
-  .cmp-hero__art {
-    left: calc(50% - min(895px, 62.15vw));
-    top: max(-121px, -8.4vw);
-    bottom: auto;
-    width: min(1862px, 129.31vw);
-  }
+  /* The whole 1440x652 frame (21:658), full width and hung from the
+     bottom: at 1440 it is Figma exactly (above it main.js zooms the page);
+     below, it shrinks with the window, so its painted title tracks the
+     title column about as the separate lettering did (at 1280 the painted
+     title ends at x559, the old one at x561), and the --cmp-night ground
+     above it matches the frame's black top row. */
+  .cmp-hero__art { left: 0; bottom: 0; width: 100%; }
+  .cmp-hero__art img { aspect-ratio: 5760 / 2608; }
 
-  /* 21:667: the top-right corner, 72.01% .. 103.68% of the frame. */
-  .cmp-hero__web { top: -6px; left: 72.01%; width: 31.67%; opacity: 1; }
-
-  /* 21:665: only the fade into the page, 397px. */
-  .cmp-hero::after { background: linear-gradient(to top, var(--cmp-bg), transparent 397px); }
+  /* The frame carries its own fade into the page (its last row is
+     --cmp-bg); a fade on top would dim the title painted into it. */
+  .cmp-hero::after { display: none; }
 
   /* 21:666: 530x296 at x 99 of 1440, i.e. 19px into a 503px column --
      41.4% of the 1280 container, so it scales with it. */
@@ -338,19 +330,9 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
 
   .cmp-hero__title-img { aspect-ratio: 1376 / 768; }
 
-  /* 21:664: a blurred #00040d ellipse, 431x232, centred a little above the
-     lettering, that keeps it legible over the plate. */
-  .cmp-hero__title::before {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    left: -6.8%;
-    top: -38.9%;
-    width: 119%;
-    height: 146%;
-    background: radial-gradient(closest-side, var(--cmp-shade) 45%, transparent);
-    pointer-events: none;
-  }
+  /* The lettering is painted into the desktop frame: the <h1> keeps its
+     place in the grid and its alt for screen readers, and paints nothing. */
+  .cmp-hero__title { opacity: 0; }
 
   .cmp-hero > .cmp-cards { grid-column: 2; grid-row: 1; }
 
