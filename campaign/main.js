@@ -303,6 +303,10 @@
     }
 
     function place() {
+      /* Focus inside a card that is about to go inert would drop to <body>,
+         and the next arrow press would do nothing. Note it here, move it to
+         the new centre card below. Focus outside the cards stays put. */
+      var hadFocus = cards.some(function (c) { return c.card.contains(document.activeElement); });
       stack(0);
       cards.forEach(function (c, i) {
         var pos = i - active;
@@ -320,6 +324,12 @@
       });
       prev.setAttribute('aria-disabled', String(active === 0));
       next.setAttribute('aria-disabled', String(active === cards.length - 1));
+      if (hadFocus) {
+        var cur = cards[active];
+        var target = cur.info || cur.card;
+        if (target === cur.card) target.setAttribute('tabindex', '-1');
+        target.focus({ preventScroll: true });
+      }
     }
 
     function go(step) {
