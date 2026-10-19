@@ -52,19 +52,20 @@
   var LOCALE = { ua: 'uk-UA', ru: 'ru-RU', en: 'en-US' };
 
   /* ── wide screens ─────────────────────────────────────────────
-     Figma "Desktop - 1920" (27:1072) is the 1440 frame (21:533) times
-     1920/1440, nothing moved: above 1440 the whole page grows with the
-     window. The owner wants the same on 2560x1440 -- the page fills the
-     width and scrolls down to the payment methods. CSS zoom on <html>
-     scales layout and text together, so browser zoom still works on top.
-     It is set here, not in CSS, because calc() cannot yet divide 100vw by
-     a length portably. */
-  function fit() {
-    var z = window.innerWidth / 1440;
-    document.documentElement.style.zoom = z > 1 ? String(z) : '';
+     Above 1440 the whole page grows with the window (Figma 27:1072 is the
+     1440 frame times 1920/1440). campaign/main.css does it before the first
+     paint with zoom: tan(atan2(100vw, 1440px)). This is only the fallback
+     for a browser without CSS trigonometry, which ignores that line: it
+     sets the same value, after the paint, as the page always used to. */
+  var cssZoom = window.CSS && CSS.supports && CSS.supports('zoom', 'tan(atan2(100vw, 1440px))');
+  if (!cssZoom) {
+    var fit = function () {
+      var z = window.innerWidth / 1440;
+      document.documentElement.style.zoom = z > 1 ? String(z) : '';
+    };
+    fit();
+    window.addEventListener('resize', fit);
   }
-  fit();
-  window.addEventListener('resize', fit);
 
   /* The card's silhouette, Figma 21:670 (275x343). Drawn as SVG so the
      slanted top and the round bottom-left corner scale with the card; the

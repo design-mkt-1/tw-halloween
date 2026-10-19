@@ -305,7 +305,7 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
   }
 
   /* The whole 1440x652 frame (21:658), full width and hung from the
-     bottom: at 1440 it is Figma exactly (above it main.js zooms the page);
+     bottom: at 1440 it is Figma exactly (above it the page is zoomed);
      below, it shrinks with the window, so its painted title tracks the
      title column about as the separate lettering did (at 1280 the painted
      title ends at x559, the old one at x561), and the --cmp-night ground
@@ -370,4 +370,18 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
 @media (min-width: 700px) {
   .tw-ftr { gap: 40px; padding: 48px clamp(24px, 8.33vw, 120px) 40px; }
   .tw-ftr__copy { padding-top: 0; text-align: right; }
+}
+
+
+/* ══ wide screens ═════════════════════════════════════════════
+   Figma "Desktop - 1920" (27:1072) is the 1440 frame (21:533) times
+   1920/1440, nothing moved: above 1440 the whole page grows with the
+   window, and the owner wants the same on 2560x1440. CSS zoom on <html>
+   scales layout and text together, so browser zoom still works on top.
+   tan(atan2(a, b)) is a / b as a plain number, the portable way to divide
+   two lengths in CSS; it applies before the first paint (it used to be set
+   by main.js after it, a 0.14 layout shift at 1920). A browser without CSS
+   trigonometry ignores the line and main.js sets the same value. */
+@media (min-width: 1440.02px) {
+  html { zoom: tan(atan2(100vw, 1440px)); }
 }
