@@ -17,7 +17,8 @@
 
    ── GET BONUS ────────────────────────────────────────────────
    There is no registration dialog on this landing (BRIEF § Deviations), so
-   TW.openForm() is never called. Today's button is an <a> to TW.url('cta').
+   TW.openForm() is never called. Today's button is an <a> to TW.url('cta:<date>') (campaign.js links, per-day
+   promo code) or else TW.url('cta').
    While links.cta is '' the anchor has NO href -- visible, styled, not a
    link -- per the template's rule against href="#".
 
@@ -170,7 +171,7 @@
     if (state === 'today') {
       /* An <a>, with href only when links.cta is set (see the header). */
       refs.btn = el('a', 'cmp-card__btn cmp-card__cta');
-      var href = TW.url('cta');
+      var href = TW.url('cta:' + day.date) || TW.url('cta');
       if (href) refs.btn.href = href;
       refs.btn.addEventListener('click', function () {
         TW.track('bonus_click', { day: day.date });

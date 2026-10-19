@@ -113,11 +113,19 @@ window.TW_CAMPAIGN = {
      dead consent links on a gambling registration form are a compliance
      problem, not a cosmetic one. */
   links: {
-    home:    '',
-    login:   '',
-    terms:   '',
-    privacy: '',
-    cta:     ''
+    home:    'https://twredirect.com/?modal=deposit',
+    login:   'https://twredirect.com/?modal=deposit',
+    terms:   'https://twredirect.com/?modal=deposit',
+    privacy: 'https://twredirect.com/?modal=deposit',
+    cta:     'https://twredirect.com/?modal=deposit',
+
+    /* Per-day GET BONUS overrides, key 'cta:<calendar date>'. campaign/main.js
+       asks TW.url('cta:<date>') first and falls back to 'cta', so tracking
+       params are appended by the same helper. The promo code lives only in
+       the link, never on the page. */
+    'cta:2026-10-23': 'https://twredirect.com/?modal=deposit&promocode=SCARY100',
+    'cta:2026-10-26': 'https://twredirect.com/?modal=deposit&promocode=PUMPKIN30',
+    'cta:2026-10-31': 'https://twredirect.com/?modal=deposit&promocode=HALLOWEEN100'
   },
 
   /* ── Tracking and affiliate ───────────────────────────────────
