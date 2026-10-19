@@ -495,6 +495,14 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
   .cmp-step__text { font-size: 18px; }
 }
 
+/* 1280+: the steps share one row height and the digit stays centred in it,
+   but the text hangs from the row's top. Centred, a step with fewer wrapped
+   lines (step 1) started its title up to 31px below the others. */
+@media (min-width: 1280px) {
+  .cmp-how__steps { align-items: stretch; }
+  .cmp-step__txt { align-self: flex-start; }
+}
+
 /* 1024-1279: three 280-ish columns cannot hold a 104px digit beside the
    text (the Russian step 2 ran to 11 lines). The digit goes above, the
    steps hang from one top line, the dividers run their full height. */
@@ -520,6 +528,14 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
   .tw-ftr__copy { padding-top: 0; line-height: 26px; text-align: right; }
   .tw-ftr__pay { align-items: flex-start; }
   .tw-ftr__label { text-align: left; }
+}
+
+/* One line from the desktop layout up: the shell gives the copy a zero
+   flex basis, so it only got what the logo and payments left over and wrapped
+   (right-aligned) when that was short. Auto basis + nowrap makes it claim its
+   own width, and the row shrinks the gap around it instead. */
+@media (min-width: 1024px) {
+  .tw-ftr__copy { flex: 1 0 auto; white-space: nowrap; }
 }
 
 
