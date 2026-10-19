@@ -201,9 +201,17 @@ window.TW_CAMPAIGN = {
      starting with https://land-crm, so a developer can try the page before
      IT issues a landing_id. It never reaches a visitor on the live domain.
 
-     supportEmail is shown on the "unavailable" card; IT hardcodes it. */
+     supportEmail is shown on the "unavailable" card; IT hardcodes it.
+
+     configUrl on GitHub Pages: the Pages deploy publishes an allowlist
+     (.github/workflows/pages.yml) that never includes a config.json, so
+     there the request could only 404 -- a red console error on every
+     visit. On *.github.io the page reads campaign/no-platform.json instead,
+     a committed `null`, which js/platform.js already treats exactly like
+     the 404 ("nobody deployed one": the demo path) without the error. On
+     IT's servers, where config.json is written, nothing changes. */
   platform: {
-    configUrl:    'config.json',
+    configUrl:    /\.github\.io$/.test(location.hostname) ? 'campaign/no-platform.json' : 'config.json',
     supportEmail: 'support@jack-pot.com',
     dev: {
       id: 8,
