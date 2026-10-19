@@ -355,7 +355,7 @@
       else if (e.key === 'ArrowRight') { go(1); e.preventDefault(); }
     });
 
-    /* Swipe: the cards follow the finger, then snap. --drag on the stage is
+    /* Swipe: the cards follow the finger, then snap. --drag on each card is
        the travel in neighbour steps (px / --nb-x); cards.css adds it to each
        card's --p. On release it rounds to the nearest card, and a quick flick
        (over 0.3 px/ms) moves one card even when the travel is short.
@@ -365,17 +365,39 @@
        click. touch-action: pan-y in cards.css leaves vertical scrolling to
        the page, which then sends pointercancel. Mouse uses the arrows. */
     var drag = null;
+    var liftTimer = 0;
+    /* --drag goes on each card, not the stage: with @property (cards.css) it
+       does not inherit, so a move restyles 9 cards, not every node in them. */
+    function setDrag(v) {
+      cards.forEach(function (c) {
+        if (v === null) c.card.style.removeProperty('--drag');
+        else c.card.style.setProperty('--drag', v);
+      });
+    }
+    function lift(on, ms) {
+      clearTimeout(liftTimer);
+      if (on) { stage.classList.add('is-lift'); return; }
+      /* will-change stays for the release slide, then goes so the centre
+         card's text is not left resampled on a layer. */
+      liftTimer = setTimeout(function () {
+        stage.classList.remove('is-lift');
+        stage.style.removeProperty('--slide');
+      }, ms + 60);
+    }
     stage.addEventListener('pointerdown', function (e) {
       if (e.pointerType === 'mouse' || drag) return;
+      clearTimeout(liftTimer);
+      stage.style.removeProperty('--slide');
+      lift(true);
       drag = { id: e.pointerId, x0: e.clientX, y0: e.clientY, on: false,
                step: parseFloat(getComputedStyle(root).getPropertyValue('--nb-x')) || 1,
-               t: e.timeStamp, x: e.clientX, v: 0 };
+               t: e.timeStamp, x: e.clientX, v: 0, s: [[e.timeStamp, e.clientX]] };
     });
     stage.addEventListener('pointermove', function (e) {
       if (!drag || e.pointerId !== drag.id) return;
       var dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
       if (!drag.on) {
-        if (Math.abs(dy) > 8 && Math.abs(dy) >= Math.abs(dx)) { drag = null; return; }
+        if (Math.abs(dy) > 8 && Math.abs(dy) >= Math.abs(dx)) { drag = null; lift(false, 0); return; }
         if (Math.abs(dx) < 8) return;
         drag.on = true;
         /* From here the gesture is the carousel's: capture keeps the moves
@@ -384,9 +406,10 @@
         stage.setPointerCapture(e.pointerId);
         stage.classList.add('is-dragging');
       }
-      var dt = e.timeStamp - drag.t;
-      if (dt > 0) drag.v = (e.clientX - drag.x) / dt;
+      /* Velocity over the last ~100 ms of moves, not the last frame's jitter. */
       drag.t = e.timeStamp; drag.x = e.clientX;
+      drag.s.push([e.timeStamp, e.clientX]);
+      while (drag.s.length > 2 && e.timeStamp - drag.s[0][0] > 100) drag.s.shift();
       /* clientX is in screen px; under the wide-screen zoom a CSS px is
          currentCSSZoom of them. */
       var f = -dx / (drag.step * (root.currentCSSZoom || 1));
@@ -394,23 +417,37 @@
       if (f < lo) f = lo + (f - lo) / 3;
       else if (f > hi) f = hi + (f - hi) / 3;
       drag.f = f;
-      stage.style.setProperty('--drag', String(-f));
+      setDrag(String(-f));
       stack(f);
     });
     function release(e) {
       if (!drag || e.pointerId !== drag.id) return;
       var d = drag;
       drag = null;
-      if (!d.on) return;
+      if (!d.on) { lift(false, 0); return; }
       var steps = Math.round(d.f || 0);
-      /* A flick that was still moving at release, recently. */
-      if (e.timeStamp - d.t < 100 && Math.abs(d.v) > 0.3 && steps === 0) steps = d.v < 0 ? 1 : -1;
+      /* Flick speed (px/ms) over the last 100 ms; stale if the finger rested
+         before lifting. */
+      var a = d.s[0], b = d.s[d.s.length - 1], v = 0;
+      if (e.timeStamp - b[0] < 100 && b[0] > a[0]) v = (b[1] - a[1]) / (b[0] - a[0]);
+      var fast = Math.abs(v) > 0.3;
+      /* A flick moves one card even when the travel is short, and wins over
+         a rounding that would send the cards back. */
+      if (fast && e.type === 'pointerup' && (steps === 0 || (steps < 0) !== (v > 0))) steps = v < 0 ? 1 : -1;
+      /* A fast release should not brake: shorten the slide with the speed
+         (340 ms at 0.3 px/ms down to 180 ms at 1.5 px/ms and up). */
+      var ms = 0;
+      if (fast) {
+        ms = Math.round(Math.max(180, Math.min(340, 340 - (Math.abs(v) - 0.3) * 133)));
+        stage.style.setProperty('--slide', ms + 'ms');
+      }
       /* Same frame: the transition comes back and --drag goes to 0 while --p
          moves, so each card animates from where the finger left it. */
       stage.classList.remove('is-dragging');
-      stage.style.removeProperty('--drag');
+      setDrag(null);
       if (e.type === 'pointerup') go(steps);
       stack(0);   // go() returns early at an end or on 0 steps
+      lift(false, ms || 340);
     }
     stage.addEventListener('pointerup', release);
     stage.addEventListener('pointercancel', release);

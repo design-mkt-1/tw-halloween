@@ -78,9 +78,18 @@
   perspective: 1400px;
 }
 
+/* Typed, non-inheriting: a change to --drag/--p on a card restyles that card
+   only, not every element inside it. Browsers without @property ignore this
+   and fall back to plain inherited custom properties; main.js writes --drag
+   on each card, so both paths give the same poses. */
+@property --drag { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --p    { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --q    { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --aq   { syntax: '<number>'; inherits: false; initial-value: 0; }
+
 /* One continuous position per card, --q = --p + --drag, instead of five
    fixed slots: main.js sets --p (index minus the active index) on each card
-   and --drag (the finger's travel in card widths) on the stage, so a card
+   and --drag (the finger's travel in card widths) on each card, so a card
    follows the finger and every in-between pose exists. --q is clamped to
    -2..2; past that a card is fully transparent. |q| is max(q, -q).
      q = 0      centre, Figma 21:534
@@ -117,6 +126,9 @@
 /* While a finger drags, the cards follow it 1:1; on release the transition
    comes back and carries them from wherever they are to the snapped pose. */
 .cmp-car__stage.is-dragging .cmp-card { transition: none; }
+/* Own layer only while a finger is down (a permanent layer would resample the
+   centre card's text); main.js adds is-lift on pointerdown and drops it when the release slide ends. */
+.cmp-car__stage.is-lift .cmp-card { will-change: transform; }
 
 .cmp-car__arrow {
   position: absolute;
