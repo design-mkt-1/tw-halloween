@@ -80,10 +80,33 @@
 
 /* ══ page ═════════════════════════════════════════════════════
    Layout A, a scrolling page: hero, "How does it work?", the shell footer.
-   One breakpoint of our own, 1024px: below it the hero is a column (title,
-   cards, the fisherman under them, Figma 21:587); from it the title sits
-   left and the cards right (21:533). The shell's 700px still moves its own
-   two bars. The container is 1280 + 80px gutters wide, 16px on mobile. */
+   Three bands of our own. campaign/cards.css uses the same queries, word
+   for word, so the hero and the cards never disagree again (they did: the
+   cards turned desktop at 768 while the hero stayed a column up to 1023,
+   and the iPad got desktop cards over the fisherman):
+
+     COLUMN   the phone comp (21:587): title, cards, the fisherman under
+              them. Phones, and any window under 1024 that is not a short
+              landscape one:
+                (max-width: 1023.98px) and (orientation: portrait),
+                (max-width: 1023.98px) and (min-height: 500.02px),
+                (max-width: 559.98px)
+     TABLET   COLUMN from 600px: the same comp at 1.25x, with the desktop
+              card (k = 1), so 768-834 is not a phone strip in the middle
+              of a dark screen.
+     WIDE     the desktop comp (21:533): title and fisherman left, cards
+              right. From 1024, and on a phone held sideways, where the
+              column would put GET BONUS under a 390px screen:
+                (min-width: 1024px),
+                (min-width: 560px) and (max-height: 500px) and (orientation: landscape)
+
+   WIDE is Figma's 1440 frame scaled by the window, s = width / 1440, up to
+   1440 (above it the whole page is zoomed, see "wide screens" at the end):
+   the hero keeps the frame's 1440:652 shape, so the painted art fills it at
+   every width instead of leaving a black band above it, and positions are
+   Figma's px times s, written min(N/1440 * 100vw, Npx). Text stays real px.
+   The shell's 700px still moves its own two bars. Safe areas (a phone's
+   notch and home bar, viewport-fit=cover) pad the header, hero and footer. */
 
 body { background: var(--cmp-bg); }
 
@@ -93,7 +116,8 @@ body { background: var(--cmp-bg); }
 /* ══ header over the hero ═════════════════════════════════════
    Figma draws no bar: the Halloween logo and a round flag button stand on
    the art. The shell's markup is untouched; only its box is restyled here.
-   Absolute, so <main> starts at the top of the page under it. */
+   Absolute, so <main> starts at the top of the page under it. 21:616: the
+   row is 16px in from the left and the flag ends 39px from the right. */
 
 .tw-hdr {
   position: absolute;
@@ -101,7 +125,7 @@ body { background: var(--cmp-bg); }
   left: 0;
   right: 0;
   height: auto;
-  padding: 6px 16px 0;
+  padding: calc(6px + env(safe-area-inset-top)) max(37px, calc(16px + env(safe-area-inset-right))) 0 max(16px, env(safe-area-inset-left));
   background: none;
   border: 0;
   -webkit-backdrop-filter: none;
@@ -112,36 +136,49 @@ body { background: var(--cmp-bg); }
 .tw-hdr__logo img { width: 159px; height: auto; aspect-ratio: 532 / 178; }
 
 /* The language trigger as Figma draws it (21:618): the current flag in a
-   blue ring. 44px rather than the drawn 40 for the tap target. The globe,
-   the code and the caret are hidden; the button keeps its aria-label. */
+   blue ring, 40px on a phone. The button itself stays 44px for the tap
+   target; the ring (::before) and the flag (::after) are drawn inside it,
+   2px in. The globe, the code and the caret are hidden; the button keeps
+   its aria-label. */
 html[lang="uk"] { --cmp-flag: url("../assets/img/icons/flag-ua.svg"); }
 html[lang="ru"] { --cmp-flag: url("../assets/img/icons/flag-ru.svg"); }
 html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
 
 .tw-lang {
+  --ring-in: 2px;
+  position: relative;
   width: 44px;
   height: 44px;
-  padding: 2px;
+  padding: 0;
   border: 0;
   border-radius: 50%;
-  background: linear-gradient(119deg, var(--cmp-ring-from) 6%, var(--cmp-ring-to) 100%);
+  background: none;
 }
 
 .tw-lang > * { display: none; }
 
-.tw-lang::before {
+.tw-lang::before,
+.tw-lang::after {
   content: "";
-  flex: 1;
-  align-self: stretch;
-  border: 1.4px solid var(--cmp-ring-brd);
+  position: absolute;
   border-radius: 50%;
+}
+
+.tw-lang::before {
+  inset: var(--ring-in);
+  background: linear-gradient(119deg, var(--cmp-ring-from) 6%, var(--cmp-ring-to) 100%);
+}
+
+.tw-lang::after {
+  inset: calc(var(--ring-in) + 2px);
+  border: 1.4px solid var(--cmp-ring-brd);
   background: var(--cmp-flag) center / cover no-repeat;
 }
 
 
 /* ══ hero ═════════════════════════════════════════════════════
    Layers, back to front: the frame (forest, fisherman, cobweb -- and on
-   desktop the title -- one raster), the fades in ::after, then the title
+   WIDE the title -- one raster), the fades in ::after, then the title
    and the cards. */
 
 .cmp-hero {
@@ -155,7 +192,7 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
      so a taller carousel pushes the fisherman down with it rather than
      under the cards. */
   min-height: 700px;
-  padding: 62px 16px 0;
+  padding: 62px max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
   background: var(--cmp-night);
 }
 
@@ -169,12 +206,15 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
    it stops growing -- at 560 the fisherman rose under the cards -- and its
    side edges fade into the ground instead of showing as a strip. */
 .cmp-hero__art {
-  left: calc(50% - clamp(375px, 100%, 430px) / 2);
+  --plate: clamp(375px, 100%, 430px);
+  left: calc(50% - var(--plate) / 2);
   bottom: 0;
-  width: clamp(375px, 100%, 430px);
+  width: var(--plate);
 }
 .cmp-hero__art img { aspect-ratio: 1500 / 2800; }
-@media (min-width: 431px) and (max-width: 1023.98px) {
+@media (min-width: 431px) and (max-width: 1023.98px) and (orientation: portrait),
+       (min-width: 431px) and (max-width: 1023.98px) and (min-height: 500.02px),
+       (min-width: 431px) and (max-width: 559.98px) {
   .cmp-hero__art { mask-image: linear-gradient(to right, transparent, #000 18%, #000 82%, transparent); }
 }
 
@@ -205,9 +245,11 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
 
 /* ══ How does it work? ════════════════════════════════════════
    21:591 on mobile, 21:537 on desktop. The digits are decoration; the step
-   titles say the number in words. */
+   titles say the number in words. Line heights are Figma's "normal" for
+   Roboto (1.17); the self-hosted cut's own normal is 1.2, which made every
+   step 3-5px taller than the comp. */
 
-.cmp-how { padding: 32px 0; }
+.cmp-how { padding: 32px max(0px, env(safe-area-inset-right)) 32px max(0px, env(safe-area-inset-left)); }
 
 .cmp-how__title {
   margin-bottom: 32px;
@@ -215,7 +257,7 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
   color: var(--accent);
   font-size: 22px;
   font-weight: var(--fw-xbold);
-  line-height: normal;
+  line-height: 1.18;
   text-align: center;
   text-transform: uppercase;
 }
@@ -223,31 +265,35 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
 .cmp-how__steps { display: grid; gap: 24px; }
 
 .cmp-step {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
   margin: 0 16px;
   padding-bottom: 24px;
   border-bottom: 2px solid var(--cmp-blue-line);
-  line-height: normal;
+  line-height: 1.172;
 }
 
 .cmp-step:last-child { padding-bottom: 0; border-bottom: 0; }
 
+/* 21:595 is 122 tall with 24 + 2 under it: the digit's box is 96. */
 .cmp-step__num {
   flex: none;
   color: var(--cmp-blue);
   font-size: 84px;
   font-weight: var(--fw-black);
+  line-height: 96px;
 }
 
 .cmp-step__txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
 
 /* Figma draws 22px here. --cmp-blue on --cmp-bg is 3.53:1, which is AA
-   only as large text, and 24px is where medium-weight text becomes large. */
-.cmp-step__title { color: var(--cmp-blue); font-size: 24px; font-weight: var(--fw-medium); }
+   only as large text, and 24px is where medium-weight text becomes large.
+   The line stays Figma's 22px one (26px), so the step keeps its height. */
+.cmp-step__title { color: var(--cmp-blue); font-size: 24px; font-weight: var(--fw-medium); line-height: 26px; }
 
-.cmp-step__text { color: var(--cmp-step-text); font-size: 16px; font-weight: var(--fw-regular); }
+.cmp-step__text { color: var(--cmp-step-text); font-size: 16px; font-weight: var(--fw-regular); text-wrap: pretty; }
 
 
 /* ══ footer ═══════════════════════════════════════════════════
@@ -256,9 +302,18 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
    brand.logo, so the footer's copy of it is hidden and the plain wordmark
    Figma draws there (21:550) is painted in its place. */
 
-.tw-ftr { gap: 32px; padding: 40px 24px 32px; background: var(--cmp-bg); }
+.tw-ftr {
+  gap: 32px;
+  padding: 40px max(24px, calc(16px + env(safe-area-inset-right))) calc(32px + env(safe-area-inset-bottom)) max(24px, calc(16px + env(safe-area-inset-left)));
+  background: var(--cmp-bg);
+}
 
 .tw-ftr__copy { padding-top: 32px; }
+
+/* Figma's badges are 36 tall and 94 wide for Visa with the 1px stroke
+   inside; the shell's 10px padding plus the border made each one 2px
+   wider, the row 8px wider than 21:563. */
+.tw-ftr__badge { padding-inline: 9px; }
 
 .tw-ftr__logo {
   width: 132px;
@@ -272,44 +327,93 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
 .tw-ftr__logo img { visibility: hidden; }
 
 
-/* ══ desktop ══════════════════════════════════════════════════ */
+/* ══ TABLET: the column at 1.25x ══════════════════════════════
+   Every number below is the phone's times 1.25; the card is the desktop
+   card (cards.css, k = 1). */
 
-@media (min-width: 1024px) {
+@media (min-width: 600px) and (max-width: 1023.98px) and (orientation: portrait),
+       (min-width: 600px) and (max-width: 1023.98px) and (min-height: 500.02px) {
 
-  /* Same grid as the hero below it, so the logo centres over the cards:
-     21:643 sits at 828..1094 and the active card at 823..1098. */
+  .tw-hdr__logo img { width: 199px; }
+
+  .cmp-hero { min-height: 875px; padding-top: 77.5px; }
+
+  .cmp-hero__art { --plate: clamp(469px, 100%, 537.5px); }
+
+  .cmp-hero__title { width: 415px; margin-bottom: -20px; }
+
+  /* Long lines on a wide screen: the steps keep a reading measure. */
+  .cmp-how__steps { max-width: 720px; margin-inline: auto; }
+}
+
+
+/* ══ WIDE ═════════════════════════════════════════════════════ */
+
+@media (min-width: 1024px),
+       (min-width: 560px) and (max-height: 500px) and (orientation: landscape) {
+
+  /* The 1440 frame's 80px gutter, scaled; 1280 of content above it. */
+  :root {
+    --cmp-pad: max(min(5.556vw, 80px), calc((100% - 1280px) / 2));
+  }
+
+  /* Same grid as the hero below it. The logo centres over the carousel
+     box (not the column): 21:643 sits at 828..1094 and the active card at
+     823..1098. */
   .tw-hdr {
     max-width: 1440px;
     margin-inline: auto;
-    padding: 39px 80px 0;
+    padding: calc(min(2.708vw, 39px) + env(safe-area-inset-top))
+             max(min(5.556vw, 80px), env(safe-area-inset-right)) 0
+             max(min(5.556vw, 80px), env(safe-area-inset-left));
     display: grid;
     grid-template-columns: minmax(0, 503fr) minmax(0, 777fr);
+    gap: 0;                    /* the shell's 10px flex gap would shift column 2 */
     align-items: start;
   }
 
-  .tw-hdr__logo { grid-column: 2; justify-self: center; }
-  .tw-hdr__logo img { width: 266px; }
+  .tw-hdr__logo {
+    --logo-w: clamp(150px, 18.47vw, 266px);
+    grid-column: 2;
+    justify-self: start;
+    /* The box is min(754px, column 2); written in vw, not %, because
+       WebKit's zoom (above 1440) applies twice to a % inside calc() here. */
+    margin-left: calc((min(754px, (100vw - 2 * min(5.556vw, 80px)) * 777 / 1280) - var(--logo-w)) / 2);
+  }
+  .tw-hdr__logo img { width: var(--logo-w); }
 
-  /* 21:644: 62px down, its right edge 147px in from the 1440 frame's. */
-  .tw-hdr__right { position: absolute; top: 62px; right: 147px; }
+  /* 21:644: 62px down, 40px in from the carousel box's right edge, which
+     is the column's edge until the column outgrows the 754px box (1402+).
+     A 44px ring here, as Figma draws it (44.7). */
+  .tw-hdr__right {
+    position: absolute;
+    top: calc(min(4.306vw, 62px) + env(safe-area-inset-top));
+    right: calc(max(min(5.556vw, 80px), env(safe-area-inset-right))
+                + max(0px, (100% - 2 * min(5.556vw, 80px)) * 777 / 1280 - 754px)
+                + min(2.778vw, 40px));
+  }
+  .tw-lang { --ring-in: 0px; }
 
-  /* 21:534: 652 tall. The cards' column starts where the left arrow does
+  /* 21:534: 1440x652. The cards' column starts where the left arrow does
      (583 - 80 = 503 of 1280); the active card's top is at 137 and the
-     title's foot 23px above the hero's. */
+     title's foot 23px above the hero's. The min-height is the frame's
+     shape (652/1440 of the width); a taller carousel still grows it.
+     Not aspect-ratio: with overflow hidden that would fix the height and
+     clip the cards on a short screen. */
   .cmp-hero {
     display: grid;
     grid-template-columns: minmax(0, 503fr) minmax(0, 777fr);
     align-items: start;
-    min-height: 652px;
-    padding: 137px max(80px, calc((100% - 1280px) / 2)) 23px;
+    min-height: min(45.28vw, 652px);
+    padding: min(9.514vw, 137px)
+             max(var(--cmp-pad), env(safe-area-inset-right))
+             min(1.597vw, 23px)
+             max(var(--cmp-pad), env(safe-area-inset-left));
   }
 
   /* The whole 1440x652 frame (21:658), full width and hung from the
-     bottom: at 1440 it is Figma exactly (above it the page is zoomed);
-     below, it shrinks with the window, so its painted title tracks the
-     title column about as the separate lettering did (at 1280 the painted
-     title ends at x559, the old one at x561), and the --cmp-night ground
-     above it matches the frame's black top row. */
+     bottom: the hero has its shape, so it fills it (a window's scrollbar
+     leaves a few px of the frame's own black top row above it). */
   .cmp-hero__art { left: 0; bottom: 0; width: 100%; }
   .cmp-hero__art img { aspect-ratio: 5760 / 2608; }
 
@@ -335,41 +439,87 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
   .cmp-hero__title { opacity: 0; }
 
   .cmp-hero > .cmp-cards { grid-column: 2; grid-row: 1; }
+}
 
-  /* 21:537: 1280 wide, title 28px, 40px down to the steps; the footer
-     starts right under them (21:548 y 851 = 21:537 bottom; its own 48px
-     top padding is the whole gap). Vertical dividers at the column gaps. */
-  .cmp-how { padding: 0 max(80px, calc((100% - 1280px) / 2)); }
+/* A phone held sideways: 390px of screen. The cards start 56px down (the
+   logo moves to the left column, above the painted title), so GET BONUS
+   ends near y 343 and stays on screen even with Safari's bars showing.
+   The carousel is taller than the frame here, so the frame hangs from the
+   top and the ground below it is the page's navy, which its last row
+   already fades into (hung from the bottom it left a black band on top). */
+@media (min-width: 560px) and (max-height: 500px) and (orientation: landscape) and (max-width: 1023.98px) {
+  .cmp-hero { padding-top: 56px; padding-right: max(16px, env(safe-area-inset-right)); background: var(--cmp-bg); }
+  .cmp-hero__art { top: 0; bottom: auto; }
+  .cmp-how__steps { max-width: 720px; margin-inline: auto; }
+  .tw-hdr__logo { --logo-w: 120px; grid-column: 1; margin-left: 0; }
+}
+
+/* ══ How it works, wide ════════════════════════════════════════
+   21:537: 1280 wide, title 28px, 40px down to the steps; the footer
+   starts right under them (21:548 y 851 = 21:537 bottom; its own 48px top
+   padding is the whole gap). Three 403px steps 35.5px apart, centred on
+   each other, with a 118px divider in the middle of each gap. */
+@media (min-width: 1024px) {
+
+  .cmp-how { padding: 0 max(var(--cmp-pad), env(safe-area-inset-right)) 0 max(var(--cmp-pad), env(safe-area-inset-left)); }
 
   .cmp-how__title { margin-bottom: 40px; padding: 0; font-size: 28px; }
 
-  .cmp-how__steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; }
+  .cmp-how__steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: center;
+    gap: 0 35.5px;
+  }
 
   .cmp-step {
     gap: 14px;
     margin: 0;
-    padding: 0 18px;
+    padding: 0;
     border-bottom: 0;
   }
 
-  .cmp-step:first-child { padding-left: 0; }
-  .cmp-step:last-child { padding-right: 0; }
-  .cmp-step + .cmp-step { border-left: 2px solid var(--cmp-blue-line); }
+  .cmp-step + .cmp-step::before {
+    content: "";
+    position: absolute;
+    left: -18.75px;
+    top: 50%;
+    width: 2px;
+    height: 118px;
+    margin-top: -59px;
+    background: var(--cmp-blue-line);
+  }
 
-  .cmp-step__num { font-size: 104px; }
+  .cmp-step__num { font-size: 104px; line-height: 1.172; }
   .cmp-step__txt { gap: 14px; }
+  .cmp-step__title { line-height: 1.172; }
   .cmp-step__text { font-size: 18px; }
+}
 
+/* 1024-1279: three 280-ish columns cannot hold a 104px digit beside the
+   text (the Russian step 2 ran to 11 lines). The digit goes above, the
+   steps hang from one top line, the dividers run their full height. */
+@media (min-width: 1024px) and (max-width: 1279.98px) {
+  .cmp-how__steps { align-items: start; }
+  .cmp-step { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .cmp-step__num { font-size: 72px; line-height: 1; }
+  .cmp-step + .cmp-step::before { top: 0; height: 100%; margin-top: 0; }
 }
 
 /* The footer turns into its row at the shell's own breakpoint, not ours.
-   21:548: 48 / 120 / 40, and the copyright right-aligned against the
-   payments, as footer-bottom's space-between puts it. These restate the
-   shell's wide values because the mobile rules above outrank its media
-   query by coming later. */
+   21:548: 48 / 120 / 40. The logo and the copyright share a 26px line at
+   the top (footer-bottom, items-center), the payments column is
+   left-aligned (21:561, items-start) beside it. These restate the shell's
+   wide values because the mobile rules above outrank its media query by
+   coming later. */
 @media (min-width: 700px) {
-  .tw-ftr { gap: 40px; padding: 48px clamp(24px, 8.33vw, 120px) 40px; }
-  .tw-ftr__copy { padding-top: 0; text-align: right; }
+  .tw-ftr {
+    align-items: flex-start;
+    gap: 40px;
+    padding: 48px max(clamp(24px, 8.33vw, 120px), env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) max(clamp(24px, 8.33vw, 120px), env(safe-area-inset-left));
+  }
+  .tw-ftr__copy { padding-top: 0; line-height: 26px; text-align: right; }
+  .tw-ftr__pay { align-items: flex-start; }
+  .tw-ftr__label { text-align: left; }
 }
 
 

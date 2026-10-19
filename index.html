@@ -74,14 +74,16 @@
 
 <!-- The hero plate is the largest paint. The <picture> in <main> is found
      only once the parser reaches it; preloaded here it starts with the CSS.
-     The media queries are the same two as the <source>s, so exactly one of
-     these two requests is made. -->
-<link rel="preload" as="image" type="image/avif" fetchpriority="high" media="(min-width: 1024px)"
+     The media queries are the same as the <source>s, so exactly one of
+     these two requests is made. The desktop frame also serves a phone held
+     sideways (campaign/main.css § page, the WIDE band); the second list is
+     exactly its complement. -->
+<link rel="preload" as="image" type="image/avif" fetchpriority="high" media="(min-width: 1024px), (min-width: 560px) and (max-height: 500px) and (orientation: landscape)"
       imagesrcset="campaign/assets/page/bg-desk-1440.avif 1440w, campaign/assets/page/bg-desk-1920.avif 1920w, campaign/assets/page/bg-desk-2560.avif 2560w, campaign/assets/page/bg-desk-3840.avif 3840w"
       imagesizes="100vw">
-<link rel="preload" as="image" type="image/avif" fetchpriority="high" media="(max-width: 1023.98px)"
+<link rel="preload" as="image" type="image/avif" fetchpriority="high" media="(max-width: 1023.98px) and (orientation: portrait), (max-width: 1023.98px) and (min-height: 500.02px), (max-width: 559.98px)"
       imagesrcset="campaign/assets/page/bg-mob-375.avif 375w, campaign/assets/page/bg-mob-750.avif 750w, campaign/assets/page/bg-mob-1125.avif 1125w, campaign/assets/page/bg-mob-1500.avif 1500w"
-      imagesizes="clamp(375px, 100vw, 430px)">
+      imagesizes="(min-width: 600px) 538px, clamp(375px, 100vw, 430px)">
 
 <!-- Order matters: reset, then tokens, then the shell, then the campaign.
 
@@ -152,13 +154,13 @@
          there is no separate cobweb layer, and on desktop the <h1> picture
          is transparent -- still there for its alt and the grid (main.css). -->
     <picture class="cmp-hero__art">
-      <source media="(min-width: 1024px)" type="image/avif" sizes="100vw"
+      <source media="(min-width: 1024px), (min-width: 560px) and (max-height: 500px) and (orientation: landscape)" type="image/avif" sizes="100vw"
               srcset="campaign/assets/page/bg-desk-1440.avif 1440w, campaign/assets/page/bg-desk-1920.avif 1920w, campaign/assets/page/bg-desk-2560.avif 2560w, campaign/assets/page/bg-desk-3840.avif 3840w">
-      <source media="(min-width: 1024px)" type="image/webp" sizes="100vw"
+      <source media="(min-width: 1024px), (min-width: 560px) and (max-height: 500px) and (orientation: landscape)" type="image/webp" sizes="100vw"
               srcset="campaign/assets/page/bg-desk-1440.webp 1440w, campaign/assets/page/bg-desk-1920.webp 1920w, campaign/assets/page/bg-desk-2560.webp 2560w, campaign/assets/page/bg-desk-3840.webp 3840w">
-      <source type="image/avif" sizes="clamp(375px, 100vw, 430px)"
+      <source type="image/avif" sizes="(min-width: 600px) 538px, clamp(375px, 100vw, 430px)"
               srcset="campaign/assets/page/bg-mob-375.avif 375w, campaign/assets/page/bg-mob-750.avif 750w, campaign/assets/page/bg-mob-1125.avif 1125w, campaign/assets/page/bg-mob-1500.avif 1500w">
-      <img src="campaign/assets/page/bg-mob-750.webp" sizes="clamp(375px, 100vw, 430px)"
+      <img src="campaign/assets/page/bg-mob-750.webp" sizes="(min-width: 600px) 538px, clamp(375px, 100vw, 430px)"
            srcset="campaign/assets/page/bg-mob-375.webp 375w, campaign/assets/page/bg-mob-750.webp 750w, campaign/assets/page/bg-mob-1125.webp 1125w, campaign/assets/page/bg-mob-1500.webp 1500w"
            alt="" width="1500" height="2800" fetchpriority="high">
     </picture>
@@ -168,10 +170,10 @@
       <picture>
         <!-- Desktop paints no title (the lettering is in the plate, the h1 is
              opacity 0), so desktop gets a 1x1 file instead of 25-144 KB. -->
-        <source media="(min-width: 1024px)" srcset="campaign/assets/page/blank.png">
-        <source type="image/avif" sizes="332px"
+        <source media="(min-width: 1024px), (min-width: 560px) and (max-height: 500px) and (orientation: landscape)" srcset="campaign/assets/page/blank.png">
+        <source type="image/avif" sizes="(min-width: 600px) 415px, 332px"
                 srcset="campaign/assets/page/title-mob-332.avif 332w, campaign/assets/page/title-mob-664.avif 664w">
-        <img class="cmp-hero__title-img" src="campaign/assets/page/title-mob-664.webp" sizes="332px"
+        <img class="cmp-hero__title-img" src="campaign/assets/page/title-mob-664.webp" sizes="(min-width: 600px) 415px, 332px"
              srcset="campaign/assets/page/title-mob-332.webp 332w, campaign/assets/page/title-mob-664.webp 664w"
              alt="Halloween Cards" data-i18n-attr="alt:hero.title" width="768" height="227">
       </picture>

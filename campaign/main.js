@@ -397,6 +397,9 @@
         /* A card that leaves the centre turns face up again. */
         if (off && c.card.classList.contains('is-flipped')) flip(c, false, true);
         ticks[i].classList.toggle('is-on', i === active);
+        /* The bar's look is its distance from the current card (cards.css
+           § pager, 21:638): 0, 1, 2, or 3 for anything further. */
+        ticks[i].setAttribute('data-d', String(Math.min(3, Math.abs(i - active))));
         if (i === active) ticks[i].setAttribute('aria-current', 'true');
         else ticks[i].removeAttribute('aria-current');
       });

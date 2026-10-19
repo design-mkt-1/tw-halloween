@@ -32,7 +32,8 @@
   --cmp-card-past:    #303845;   /* 21:685 card fill, Expired */
   --cmp-card-soon:    #1e3060;   /* 21:700 card fill, Opens tomorrow */
   --cmp-card-shade:   #000000;   /* 21:670 bottom gradient, 0 -> 100% black */
-  --cmp-card-drop:    rgba(0, 0, 0, .8);    /* 21:669 drop shadow */
+  --cmp-card-drop:    rgba(0, 0, 0, .8);    /* 21:669 drop shadow, desktop */
+  --cmp-card-drop-m:  rgba(0, 0, 0, .35);   /* 21:712 drop shadow, mobile */
   /* Pill: Figma draws today's pill #007bff (21:674), 3.98:1 under white
      9.6-12px text. The tomorrow pill's own blue (21:704) passes at 6.64:1
      and is used for both. */
@@ -47,8 +48,13 @@
   --cmp-cta-rim:      rgba(255, 255, 255, .25); /* 21:678 inner top highlight */
   --cmp-arrow:        #007bff;   /* 21:636 / 21:637 arrows (3.98:1 icon, AA non-text) */
   --cmp-arrow-drop:   rgba(0, 0, 0, .8);    /* 21:636 */
-  --cmp-tick:         #60a5fa;   /* 21:640 */
+  /* Pager, 21:638: four bars, 40 / 24 / 16 / 8 wide, blue, light blue,
+     orange, violet. Figma's violet #7c3aed is 2.9:1 on --cmp-bg, under
+     the 3:1 a control needs; violet-500 is the next step up (3.9:1). */
   --cmp-tick-on:      #3b82f6;   /* 21:639 */
+  --cmp-tick:         #60a5fa;   /* 21:640 */
+  --cmp-tick-mid:     #f97316;   /* 21:641 */
+  --cmp-tick-far:     #8b5cf6;   /* 21:642 is #7c3aed, see above */
 }
 
 /* ══ carousel ══════════════════════════════════════════════════ */
@@ -57,8 +63,8 @@
   --card-w: calc(275px * var(--k));
   --card-h: calc(400px * var(--k));
   /* neighbour placement, measured off 21:534 */
-  --nb-x: 218px;
-  --nb-y: 16px;
+  --nb-x: calc(218px * var(--k));
+  --nb-y: calc(16px * var(--k));
   --nb-rot: 19deg;
   --nb-scale: .8;
   --arrow: 64px;
@@ -71,7 +77,6 @@
   /* No clip here: a clip at this box's edge cut the left neighbour and its
      shadow on a straight line over the hero art (owner, 2026-10-17). The
      hero clips at the screen edge itself (main.css .cmp-hero). */
-  padding-block: 8px 0;
 }
 
 .cmp-car__stage {
@@ -127,7 +132,7 @@
 
 .cmp-car__arrow {
   position: absolute;
-  top: calc(8px + var(--card-h) / 2 - var(--arrow) / 2 + 26px * var(--k));
+  top: calc(var(--card-h) / 2 - var(--arrow) / 2 + 26px * var(--k));
   z-index: 4;
   display: grid;
   place-items: center;
@@ -153,34 +158,47 @@
   outline-offset: 3px;
 }
 
-/* 21:638: 4px bars, the current one 40px. Each is a 24px-tall button; the
-   bar itself is the ::before. */
+/* 21:638 draws four 4px bars that shrink away from the current one:
+   40 blue, 24 light blue, 16 orange, 8 violet. It is a mock of a shorter
+   calendar; this one has nine days, so there are nine bars, and each takes
+   Figma's look by its distance from the current card (data-d, set by
+   main.js): 0, 1, 2, then 3 for everything further. With today first, the
+   row reads exactly as Figma draws it.
+   Each bar is a button 16px wider than its bar (24px at least, WCAG 2.5.8),
+   so bars stand 16px apart rather than Figma's 4: two 24px targets whose
+   centres are 12px apart would overlap. Every colour is 3.9:1 or more on
+   the ground under it, so no bar needs dimming. */
 .cmp-car__bar {
   display: flex;
   justify-content: center;
   padding: 0 16px;
 }
 .cmp-car__tick {
+  --bar: 8px;
+  --bar-c: var(--cmp-tick-far);
   display: grid;
   place-items: center;
-  min-width: 24px;               /* WCAG 2.5.8 target; Figma's bars are 4px apart */
+  width: max(24px, calc(var(--bar) + 16px));
   height: 24px;
   padding: 0;
   border: 0;
   background: none;
+  flex: none;
   cursor: pointer;
+  transition: width var(--slide) var(--ease-out);
 }
+.cmp-car__tick[data-d="2"] { --bar: 16px; --bar-c: var(--cmp-tick-mid); }
+.cmp-car__tick[data-d="1"] { --bar: 24px; --bar-c: var(--cmp-tick); }
+.cmp-car__tick.is-on       { --bar: 40px; --bar-c: var(--cmp-tick-on); }
 .cmp-car__tick::before {
   content: "";
-  width: 8px;
+  width: var(--bar);
   height: 4px;
   border-radius: 2px;
-  background: var(--cmp-tick);
-  opacity: .45;
-  transition: width var(--slide) var(--ease-out), opacity var(--slide) var(--ease-out);
+  background: var(--bar-c);
+  transition: width var(--slide) var(--ease-out), background-color var(--slide) var(--ease-out);
 }
-.cmp-car__tick.is-on::before { width: 40px; background: var(--cmp-tick-on); opacity: 1; }
-.cmp-car__tick:focus-visible { outline: 2px solid var(--text); outline-offset: 1px; border-radius: 4px; }
+.cmp-car__tick:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; border-radius: 6px; }
 
 /* ══ one card ══════════════════════════════════════════════════ */
 .cmp-card__inner {
@@ -226,7 +244,9 @@
   width: 100%;
   height: calc(343px * var(--k));
   fill: var(--cmp-card-fill, var(--cmp-card-today));
-  filter: drop-shadow(0 8px 25px var(--cmp-card-drop));
+  /* 21:669: 0 8.33 50 at 80% (21:712 on a phone: 0 6.66 33 at 35%). Only
+     the flat <svg> carries it; a card is a layer only while it moves. */
+  filter: drop-shadow(0 8.33px 50px var(--cmp-card-drop));
 }
 .cmp-card__shape .cmp-card__fade { fill: url(#cmp-card-fade); }
 .cmp-car__defs { position: absolute; width: 0; height: 0; overflow: hidden; }
@@ -244,12 +264,12 @@
      the pill may overhang the card a little, then wraps to two lines rather
      than cut the date. */
   width: max-content;
-  max-width: calc(100% + 16px);
+  max-width: calc(100% + var(--lbl-over, 16px));
   margin: 0;
-  padding: 4px 12px;
-  border-radius: 10px;
+  padding: 4.8px var(--lbl-px, 14.4px);   /* 21:674 */
+  border-radius: 9.6px;
   background: var(--cmp-pill-today);
-  font-size: 12px;
+  font-size: var(--lbl-fs, 12px);
   font-weight: var(--fw-bold);
   font-stretch: var(--font-stretch-tight);
   line-height: 1.25;
@@ -308,28 +328,39 @@
 .cmp-card--past .cmp-card__line,
 .cmp-card--past .cmp-card__amount { color: var(--cmp-grey-ink); }
 
-/* Info: a small pill in the empty corner the slanted top leaves, above the
-   ball's right edge. The pseudo-element widens the touch target to 44px. */
+/* Info is not in Figma (the card has no terms there) but it is the way to
+   the terms, and step 1 of "How does it work?" names it. It sat on the
+   ball's top-right; it now stands under the left end of the date pill, in
+   the card's empty top-left corner: at that height the ball's edge is 8px
+   to its right (measured off the ball's alpha, ball-orange-884), and the
+   offer lines below never reach it, however they wrap. The pseudo-element
+   makes the touch target at least 44x44 without moving anything. */
 .cmp-card__info {
   position: absolute;
   z-index: 2;
-  right: calc(8px * var(--k));
-  top: calc(64px * var(--k));
-  min-width: 52px;
-  height: 28px;
-  padding: 0 12px;
+  /* 4px under the date pill: its top, its one line and its padding. The
+     compact values (a smaller card) come from § the bands. */
+  left: var(--info-x, 8px);
+  top: calc(26px * var(--k) + var(--lbl-fs, 12px) * 1.25 + 13.6px);
+  min-width: var(--info-min, 52px);
+  height: var(--info-h, 28px);
+  padding: 0 var(--info-pad, 12px);
   border: 1px solid var(--glass-brd);
   border-radius: var(--r-pill);
   background: var(--cmp-pill-today);
   color: var(--text);
-  font: var(--fw-bold) 14px/1 var(--font);
+  font: var(--fw-bold) var(--info-fs, 14px)/1 var(--font);
   cursor: pointer;
   transition: transform 140ms var(--ease-out);
 }
-.cmp-card__info::after {
+.cmp-card__info::after,
+.cmp-card__btn::after {
   content: "";
   position: absolute;
-  inset: -8px -4px;
+  top: min(0px, calc(50% - 22px));
+  bottom: min(0px, calc(50% - 22px));
+  left: min(0px, calc(50% - 22px));
+  right: min(0px, calc(50% - 22px));
 }
 .cmp-card--past .cmp-card__info { background: var(--cmp-pill-past); color: var(--cmp-grey-ink); }
 .cmp-card__info:active { transform: scale(.94); }
@@ -349,16 +380,23 @@
   padding: 0 16px;
   border: 0;
   border-radius: var(--r-pill);
-  font: var(--fw-semi) 22px/1 var(--font);
+  /* 21:679: 24px. "ОТРИМАТИ БОНУС" at 24px is 212px wide in a 218px
+     button, so Ukrainian and Russian take Roboto's condensed width (75%,
+     --font-stretch-tight), which brings it to ~180. */
+  font: var(--fw-semi) 24px/1 var(--font);
   letter-spacing: -.01em;
   text-decoration: none;
   white-space: nowrap;
 }
+:lang(uk) .cmp-card__btn,
+:lang(ru) .cmp-card__btn { font-stretch: var(--font-stretch-tight); }
 .cmp-card--past .cmp-card__btn { background: var(--cmp-btn-past); color: var(--cmp-grey-ink); }
 .cmp-card--next .cmp-card__btn { background: var(--cmp-btn-soon); color: var(--text); }
 
-/* Ink is --accent-ink, not Figma's white: white on the #ff8c00 end is
-   2.33:1. Dark ink holds 4.79:1 or better across the whole gradient. */
+/* Ink is --accent-ink, not Figma's white. 24px is large text, so white
+   would need 3:1, and it gets 2.33:1 on the #ff8c00 end, 2.9:1 in the
+   middle and 3.44:1 only at the --accent end. Dark ink holds 4.79:1 or
+   better across the whole gradient. */
 .cmp-card__cta {
   background: linear-gradient(to right, var(--cmp-cta-from), var(--accent));
   color: var(--accent-ink);
@@ -401,8 +439,15 @@
   outline-offset: 3px;
 }
 
-/* ══ phone, 21:587 ═════════════════════════════════════════════ */
-@media (max-width: 767px) {
+/* ══ the bands ═════════════════════════════════════════════════
+   The same three as campaign/main.css § page, word for word: COLUMN (the
+   phone comp, 21:587), TABLET (COLUMN from 600px at 1.25x) and WIDE (the
+   desktop comp, 21:534, also on a phone held sideways). */
+
+/* ── COLUMN, 21:587 ── */
+@media (max-width: 1023.98px) and (orientation: portrait),
+       (max-width: 1023.98px) and (min-height: 500.02px),
+       (max-width: 559.98px) {
   .cmp-cards {
     --k: .8;
     --nb-x: 104px;
@@ -411,13 +456,19 @@
     --nb-scale: .7;
     --arrow: 44px;
     --slide: 340ms;
+    --lbl-fs: 11px;
+    --info-x: 4px;
+    --info-min: 0px;
+    --info-h: 26px;
+    --info-pad: 8px;
+    --info-fs: 13px;
   }
   /* The neighbours drop 85px in 21:606; the stage grows to keep them. */
   .cmp-car__stage { height: calc(var(--card-h) + 52px); }
   /* The pager sits BELOW the fisherman painted into the hero plate, which
      hangs from the hero's bottom edge: 21:611 is at y669, the cards at y144
-     (21:606), so the 4px bar's top is 525px into this box and its 24px
-     button starts 10px above that. Under 364px the title above shrinks
+     (21:606), so the 4px bar's top is 525px into this box and its 44px
+     button starts 20px above that. Under 364px the title above shrinks
      (main.css: 332px wide, max 100% of a 16px-padded hero, 768:227) and
      lifts this box; the last term puts the same height back so the bar
      stays at y669 of the hero. */
@@ -425,14 +476,16 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: calc(515px + (332px - min(332px, 100vw - 32px)) * 227 / 768);
+    padding: 0;
+    top: calc(505px + (332px - min(332px, 100vw - 32px)) * 227 / 768);
   }
+  .cmp-car__tick { height: 44px; }
   .cmp-cards { height: calc(539px + (332px - min(332px, 100vw - 32px)) * 227 / 768); }
   /* 21:587 draws no arrows. They stay in the tab order and show only while
-     the keyboard is inside the carousel. */
+     the keyboard is inside the carousel (and, on TABLET, for a mouse). */
   .cmp-car__arrow,
   .cmp-car__arrow[aria-disabled="true"] {
-    top: calc(8px + var(--card-h) / 2 - var(--arrow) / 2);
+    top: calc(var(--card-h) / 2 - var(--arrow) / 2);
     opacity: 0;
     pointer-events: none;
   }
@@ -441,12 +494,102 @@
   .cmp-car__arrow--prev { left: 8px; }
   .cmp-car__arrow--next { right: 8px; }
 
-  .cmp-card__label { font-size: 11px; padding: 3px 10px; }
+  .cmp-card__shape { filter: drop-shadow(0 6.66px 33.3px var(--cmp-card-drop-m)); }
   .cmp-card__line { font-size: 16px; }
   .cmp-card__amount { font-size: 30px; }
   .cmp-card__btn { font-size: 18px; }
   .cmp-card__terms { font-size: 14px; }
-  .cmp-card__info { font-size: 13px; height: 26px; }
+}
+
+/* ── TABLET: COLUMN at 1.25x, the desktop card ── */
+@media (min-width: 600px) and (max-width: 1023.98px) and (orientation: portrait),
+       (min-width: 600px) and (max-width: 1023.98px) and (min-height: 500.02px) {
+  .cmp-cards {
+    --k: 1;
+    --nb-x: 130px;
+    --nb-y: 106px;
+    --arrow: 56px;
+    --lbl-fs: 12px;
+    --info-x: 8px;
+    --info-min: 52px;
+    --info-h: 28px;
+    --info-pad: 12px;
+    --info-fs: 14px;
+    /* Arrows (for a mouse) just outside the neighbours' inner halves. */
+    max-width: 560px;
+    /* 539 and 505 times 1.25; the title above is always its full 415px. */
+    height: 674px;
+  }
+  .cmp-car__stage { height: calc(var(--card-h) + 65px); }
+  .cmp-car__bar { top: 636px; }
+  .cmp-card__line { font-size: 18px; }
+  .cmp-card__amount { font-size: 34px; }
+  .cmp-card__btn { font-size: 24px; }
+  .cmp-card__terms { font-size: 16px; }
+}
+@media (hover: hover) and (pointer: fine) and (min-width: 600px) and (max-width: 1023.98px) and (orientation: portrait),
+       (hover: hover) and (pointer: fine) and (min-width: 600px) and (max-width: 1023.98px) and (min-height: 500.02px) {
+  .cmp-car__arrow { opacity: 1; pointer-events: auto; }
+  .cmp-car__arrow[aria-disabled="true"] { opacity: .35; pointer-events: auto; }
+}
+
+/* ── WIDE, 21:534 ──
+   The card scales with the frame, k = width / 1440, but never below the
+   phone card (.8). Text sizes stay px: each is the desktop size times k,
+   floored at the phone's. The carousel box starts at the column's left
+   edge (21:636 at x583, where the column starts), not centred in it. */
+@media (min-width: 1024px),
+       (min-width: 560px) and (max-height: 500px) and (orientation: landscape) {
+  .cmp-cards {
+    --k: .8;
+    --lbl-fs: max(11px, 12px * var(--k));
+    --info-x: 4px;
+    --info-min: 0px;
+    --info-h: 26px;
+    --info-pad: 8px;
+    --info-fs: 13px;
+    margin-inline: 0;
+  }
+  @supports (width: calc(1px * tan(atan2(1px, 1px)))) {
+    .cmp-cards { --k: clamp(.8, tan(atan2(100vw, 1440px)), 1); }
+  }
+  /* 21:638's bars are at y564: 427 under the card's top, 3 less than the
+     stage's 420 plus half the 24px button. */
+  .cmp-car__bar { margin-top: -3px; }
+  .cmp-card__line { font-size: max(16px, 18px * var(--k)); }
+  .cmp-card__amount { font-size: max(30px, 34px * var(--k)); }
+  .cmp-card__btn { font-size: max(18px, 24px * var(--k)); }
+  .cmp-card__terms { font-size: max(14px, 16px * var(--k)); }
+}
+@media (min-width: 1440px) {
+  .cmp-cards {
+    --k: 1;
+    --info-x: 8px;
+    --info-min: 52px;
+    --info-h: 28px;
+    --info-pad: 12px;
+    --info-fs: 14px;
+  }
+}
+
+/* A phone held sideways (main.css): a smaller card, so GET BONUS ends
+   inside a 390px screen, and the neighbours a little closer so the left
+   one stays off the fisherman's pumpkin. Swipe, as on any phone. */
+@media (min-width: 560px) and (max-height: 500px) and (orientation: landscape) and (max-width: 1023.98px) {
+  .cmp-cards {
+    --k: .75;
+    --nb-x: min(120px, 15vw);
+    --lbl-px: 10px;
+    --lbl-over: 32px;      /* the Ukrainian label, one line on a 206px card */
+    --info-x: 3px;
+    --info-pad: 7px;
+  }
+}
+@media (hover: none) and (min-width: 560px) and (max-height: 500px) and (orientation: landscape) and (max-width: 1023.98px) {
+  .cmp-car__arrow,
+  .cmp-car__arrow[aria-disabled="true"] { opacity: 0; pointer-events: none; }
+  .cmp-cards:has(:focus-visible) .cmp-car__arrow { opacity: 1; pointer-events: auto; }
+  .cmp-cards:has(:focus-visible) .cmp-car__arrow[aria-disabled="true"] { opacity: .35; }
 }
 
 /* ══ reduced motion ════════════════════════════════════════════
