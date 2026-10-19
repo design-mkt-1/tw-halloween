@@ -100,8 +100,12 @@
   function todayIn(timeZone) {
     var forced = new URLSearchParams(location.search).get('day');
     if (forced && /^\d{4}-\d{2}-\d{2}$/.test(forced)) return forced;
-    /* en-CA formats as YYYY-MM-DD, which also sorts as a string. */
-    return new Intl.DateTimeFormat('en-CA', { timeZone: timeZone }).format(new Date());
+    /* YYYY-MM-DD from parts (not locale output), which also sorts as a string. */
+    var parts = {};
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: timeZone, year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(new Date()).forEach(function (p) { parts[p.type] = p.value; });
+    return parts.year + '-' + parts.month + '-' + parts.day;
   }
 
   function nextDay(iso) {
@@ -171,10 +175,10 @@
       });
     } else {
       /* Not a control at all: a disabled <button> would still be announced
-         as a dimmed button with nothing to do. aria-disabled on a plain span
-         keeps the word visible and says why it does nothing. */
+         as a dimmed button with nothing to do. A plain span keeps the word
+         visible; the word itself says why it does nothing (aria-disabled is
+         not valid on a generic element). */
       refs.btn = el('span', 'cmp-card__btn');
-      refs.btn.setAttribute('aria-disabled', 'true');
     }
     front.appendChild(refs.btn);
     inner.appendChild(front);
@@ -232,7 +236,8 @@
       refs.top.classList.toggle('is-long', refs.top.textContent.length > 12);
       refs.bottom.classList.toggle('is-long', refs.bottom.textContent.length > 12);
       refs.info.textContent = TW.t('card.info');
-      refs.info.setAttribute('aria-label', TW.t('card.info.aria'));
+      /* Accessible name starts with the visible word (WCAG 2.5.3). */
+      refs.info.setAttribute('aria-label', TW.t('card.info') + ' — ' + TW.t('card.info.aria'));
       refs.backLabel.textContent = text;
       refs.terms.textContent = TW.t('terms.' + day.date);
       refs.back.textContent = TW.t('card.back');
@@ -250,6 +255,7 @@
     if (!root || !cal || !cal.days) return;
 
     var today = todayIn(cal.timeZone);
+    watchMidnight(cal.timeZone, today);
     var cards = cal.days.map(function (day) { return buildCard(day, stateOf(day.date, today)); });
 
     /* Start on today; before the calendar, the first card; after it, the
@@ -289,6 +295,8 @@
         paint(c, money);
         ticks[i].setAttribute('aria-label', c.label.textContent);
       });
+      var md = document.querySelector('meta[name="description"]');
+      if (md) md.setAttribute('content', TW.t('meta.description'));
       prev.setAttribute('aria-label', TW.t('card.prev'));
       next.setAttribute('aria-label', TW.t('card.next'));
     }
@@ -411,4 +419,27 @@
     place();
     TW.on('lang', render);
   });
+
+  /* Card states are built once from today's date. When the date rolls over
+     while the tab stays open (timer to the next midnight in the campaign
+     zone, and a re-check when the tab becomes visible again), reload so the
+     states, the active card and the card structure are all rebuilt. A forced
+     ?day= never changes, so it never reloads. */
+  function watchMidnight(timeZone, shown) {
+    var timer = null;
+    function check() {
+      if (todayIn(timeZone) !== shown) { location.reload(); return; }
+      arm();
+    }
+    function arm() {
+      clearTimeout(timer);
+      /* Wake each minute: cheap, immune to sleep/clock jumps, and at most a
+         minute late. */
+      timer = setTimeout(check, 60000);
+    }
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) check();
+    });
+    arm();
+  }
 }());

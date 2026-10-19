@@ -36,9 +36,9 @@
 
      style-src carries 'unsafe-inline' for two real reasons, not laziness: the
      noscript fallback near the end of this head is an inline style block, and
-     js/flip.js sets style attributes -- the stagger index on each winning card
-     and will-change on a card mid-flip. Without it the no-JS fallback and the
-     reveal stagger both break, and they break SILENTLY: a CSP violation shows
+     scripts set style attributes (campaign/main.js sets --p and --drag on the
+     cards). Without it the no-JS fallback and the card poses both break, and
+     they break SILENTLY: a CSP violation shows
      up in the console and nowhere else.
 
      frame-ancestors is absent because browsers ignore it in a meta policy;
@@ -66,8 +66,7 @@
 
      Two subsets, not one, and not because the default language is Ukrainian:
      the first paint genuinely draws both scripts. The copy is Cyrillic; the
-     offer figures, the tab labels ("EMAIL") and the apostrophe in Заб’єш are
-     latin, and the Cyrillic range stops short of the apostrophe. The other six
+     offer figures, the word "Info" and the currency code are latin. The other six
      woff2 — latin-ext, the italic cuts and the two hryvnia glyphs — stay
      deferred: they belong to the dialog, which is closed at load. -->
 <link rel="preload" as="font" type="font/woff2" href="assets/fonts/roboto-cyrillic.woff2" crossorigin>
@@ -167,10 +166,9 @@
          the heading's text and follows the language. -->
     <h1 class="cmp-hero__title">
       <picture>
-        <source media="(min-width: 1024px)" type="image/avif" sizes="530px"
-                srcset="campaign/assets/page/title-desk-530.avif 530w, campaign/assets/page/title-desk-1060.avif 1060w">
-        <source media="(min-width: 1024px)" type="image/webp" sizes="530px"
-                srcset="campaign/assets/page/title-desk-530.webp 530w, campaign/assets/page/title-desk-1060.webp 1060w">
+        <!-- Desktop paints no title (the lettering is in the plate, the h1 is
+             opacity 0), so desktop gets a 1x1 file instead of 25-144 KB. -->
+        <source media="(min-width: 1024px)" srcset="campaign/assets/page/blank.png">
         <source type="image/avif" sizes="332px"
                 srcset="campaign/assets/page/title-mob-332.avif 332w, campaign/assets/page/title-mob-664.avif 664w">
         <img class="cmp-hero__title-img" src="campaign/assets/page/title-mob-664.webp" sizes="332px"
