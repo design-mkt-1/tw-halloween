@@ -9,10 +9,13 @@
    real px and browser zoom works.
 
    Motion (built with the `animate` skill, template rules quoted):
-     * one curve, --ease-out; entry slower than exit -- the flip to the back
-       takes 420ms, the return 300ms; the slide 300ms, 340ms on a phone
-     * the slide follows the finger on touch (main.js § swipe); CSS
-       transitions retarget, so a new swipe or arrow never waits for the old
+     * the slide is not a CSS transition: main.js § motion moves one number
+       per card, --q, under the finger 1:1 and then with a spring that starts
+       from the current pose and speed, so nothing restarts or jumps; the
+       stacking order comes from the same number
+     * the flip: one curve, --ease-out; entry slower than exit -- 420ms to
+       the back, 300ms back -- and each face's opacity switches when the
+       card is edge-on, so iOS never shows a face's children mirrored
      * transform and opacity only
      * no filter or box-shadow on a node that rotates in 3D: the shadow is a
        filter on the flat <svg> inside a face, never on a face or __inner
@@ -59,7 +62,7 @@
   --nb-rot: 19deg;
   --nb-scale: .8;
   --arrow: 64px;
-  --slide: 300ms;
+  --slide: 300ms;               /* the pager bar only */
 
   position: relative;
   width: 100%;
@@ -78,27 +81,30 @@
   perspective: 1400px;
 }
 
-/* Typed, non-inheriting: a change to --drag/--p on a card restyles that card
+/* Typed, non-inheriting: a change to --q on a card restyles that card
    only, not every element inside it. Browsers without @property ignore this
-   and fall back to plain inherited custom properties; main.js writes --drag
-   on each card, so both paths give the same poses. */
-@property --drag { syntax: '<number>'; inherits: false; initial-value: 0; }
-@property --p    { syntax: '<number>'; inherits: false; initial-value: 0; }
+   and fall back to plain inherited custom properties, with the same poses. */
 @property --q    { syntax: '<number>'; inherits: false; initial-value: 0; }
 @property --aq   { syntax: '<number>'; inherits: false; initial-value: 0; }
 
-/* One continuous position per card, --q = --p + --drag, instead of five
-   fixed slots: main.js sets --p (index minus the active index) on each card
-   and --drag (the finger's travel in card widths) on each card, so a card
-   follows the finger and every in-between pose exists. --q is clamped to
-   -2..2; past that a card is fully transparent. |q| is max(q, -q).
+/* One continuous position per card instead of five fixed slots: main.js
+   writes --q (index minus the fractional position under the centre,
+   clamped to -2..2) on each card every frame of a move. Every property
+   below is a continuous function of it, with the rest poses unchanged:
      q = 0      centre, Figma 21:534
      q = +-1    neighbour: --nb-x / --nb-y / --nb-rot / --nb-scale, opacity --nb-op
-     q = +-2    off-stage, opacity 0, so a card entering slides in from here */
+     q = +-2    off-stage, opacity 0, so a card entering slides in from here
+   x and the tilt are linear in q, so the centre card moves 1:1 with the
+   finger. The drop (y) eases in and out between centre and neighbour
+   (3a^2 - 2a^3), so a card leaves the centre sideways, not on a V. The
+   size follows a^2(3 - a)/2, the same 0/1/2 at the rest poses but with no
+   kink at the centre. Opacity falls with a^2 up to the neighbour, so the
+   two cards crossing mid-slide are nearly opaque instead of two ghosts,
+   then linearly to 0 at q = +-2. a = |q|; a1 = min(a, 1), a2 = max(a - 1, 0). */
 .cmp-card {
-  --p: 0;
-  --q: clamp(-2, var(--p) + var(--drag, 0), 2);
   --aq: max(var(--q), -1 * var(--q));
+  --a1: min(var(--aq), 1);
+  --a2: max(var(--aq) - 1, 0);
   --nb-op: .75;
   position: absolute;
   left: 50%;
@@ -107,28 +113,17 @@
   height: var(--card-h);
   margin-left: calc(var(--card-w) / -2);
   transform:
-    translate(calc(var(--q) * var(--nb-x)), calc(min(var(--aq), 1) * var(--nb-y)))
+    translate(calc(var(--q) * var(--nb-x)),
+              calc(var(--a1) * var(--a1) * (3 - 2 * var(--a1)) * var(--nb-y)))
     rotate(calc(var(--q) * var(--nb-rot)))
-    scale(calc(1 - var(--aq) * (1 - var(--nb-scale))));
-  opacity: min(1 - var(--aq) * (1 - var(--nb-op)), (2 - var(--aq)) * var(--nb-op));
-  transition:
-    transform var(--slide) var(--ease-out),
-    opacity var(--slide) var(--ease-out);
-  z-index: 0;
+    scale(calc(1 - var(--aq) * var(--aq) * (3 - var(--aq)) / 2 * (1 - var(--nb-scale))));
+  opacity: calc(1 - (1 - var(--nb-op)) * var(--a1) * var(--a1) - var(--nb-op) * var(--a2));
   perspective: 1400px;
 }
 /* Figma draws the soon card at half opacity (21:699). */
 .cmp-card--next { --nb-op: .5; }
-/* data-pos (p rounded and clamped to -2..2) only orders the stack. */
-.cmp-card[data-pos="0"] { z-index: 3; }
-.cmp-card[data-pos="-1"],
-.cmp-card[data-pos="1"] { z-index: 2; }
-/* While a finger drags, the cards follow it 1:1; on release the transition
-   comes back and carries them from wherever they are to the snapped pose. */
-.cmp-car__stage.is-dragging .cmp-card { transition: none; }
-/* Own layer only while a finger is down (a permanent layer would resample the
-   centre card's text); main.js adds is-lift on pointerdown and drops it when the release slide ends. */
-.cmp-car__stage.is-lift .cmp-card { will-change: transform; }
+/* z-index and will-change are inline from main.js § motion: the stacking
+   follows --q frame by frame, and a layer exists only while cards move. */
 
 .cmp-car__arrow {
   position: absolute;
@@ -210,6 +205,17 @@
   text-align: center;
 }
 .cmp-card__back { transform: rotateY(180deg); }
+/* backface-visibility alone is not enough on iOS Safari: a face's children
+   that sit on their own layer (the label, Info, the buttons) show through
+   the other face, mirrored. So the hidden face is also transparent, and
+   each face switches when the card is edge-on -- 13% into the --ease-out
+   curve (rotateY reaches 90deg there): 55ms of the 420ms flip, 40ms of the
+   300ms return. Opacity, not visibility, so Back can take focus at once. */
+.cmp-card__face { transition: opacity 0s linear 40ms; }
+.cmp-card__back,
+.cmp-card.is-flipped .cmp-card__front { opacity: 0; }
+.cmp-card.is-flipped .cmp-card__back { opacity: 1; }
+.cmp-card.is-flipped .cmp-card__face { transition-delay: 55ms; }
 
 /* The silhouette carries the colour and the shadow. It never rotates on its
    own -- its face does -- so the filter does not flatten the 3D flip. */
@@ -404,8 +410,6 @@
     --nb-rot: 18deg;
     --nb-scale: .7;
     --arrow: 44px;
-    /* A phone flick covers more of the screen: a little longer reads as a
-       glide, not a jump. */
     --slide: 340ms;
   }
   /* The neighbours drop 85px in 21:606; the stage grows to keep them. */
@@ -446,10 +450,9 @@
 }
 
 /* ══ reduced motion ════════════════════════════════════════════
-   Degrade, never remove: the slide jumps, the flip crossfades, the press
-   feedback above is untouched. */
+   Degrade, never remove: the slide jumps (main.js § motion), the flip
+   crossfades, the press feedback above is untouched. */
 @media (prefers-reduced-motion: reduce) {
-  .cmp-card,
   .cmp-car__tick::before { transition: none; }
 
   .cmp-card__inner,
@@ -466,4 +469,5 @@
   .cmp-card__back,
   .cmp-card.is-flipped .cmp-card__front { opacity: 0; }
   .cmp-card.is-flipped .cmp-card__back { opacity: 1; }
+  .cmp-card.is-flipped .cmp-card__face { transition-delay: 0s; }
 }

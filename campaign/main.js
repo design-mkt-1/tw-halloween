@@ -29,10 +29,11 @@
    show no terms and have no Info.
 
    ── Carousel ─────────────────────────────────────────────────
-   Every card sits in the same spot; --p (its index minus the active one)
-   places it and data-pos (-2..2) stacks it (cards.css). On touch the cards
-   follow the finger (§ swipe). Only pos 0 is interactive: the rest are inert and
-   aria-hidden. Arrows, swipe, and ArrowLeft/ArrowRight while focus is
+   Every card sits in the same spot; --q (its index minus the fractional
+   position under the centre) poses it and its z-index stacks it, both
+   written each frame by § motion. On touch the cards follow the finger
+   (§ swipe). Only the active card (data-pos 0) is interactive: the rest are
+   inert and aria-hidden. Arrows, swipe, and ArrowLeft/ArrowRight while focus is
    inside move one card; the pager under the cards jumps to any day. The
    ends do not wrap: an end arrow turns
    aria-disabled rather than disabled, so a keyboard user's focus is not
@@ -41,8 +42,8 @@
    ── Rules this file keeps ────────────────────────────────────
    * All copy is TW.t(); every string re-renders on TW.on('lang').
    * Offer figures are numbers from campaign.js, formatted per locale.
-   * prefers-reduced-motion is handled in cards.css: the slide becomes an
-     instant move and the flip a crossfade. Nothing here branches on it.
+   * prefers-reduced-motion: the slide becomes an instant move (§ motion,
+     the only branch here) and the flip a crossfade (cards.css).
    ═══════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -301,13 +302,82 @@
       next.setAttribute('aria-label', TW.t('card.next'));
     }
 
-    /* data-pos only stacks the cards (cards.css); shift is the drag, so the
-       card nearest the centre comes to the front while the finger moves. */
-    function stack(shift) {
+    /* ── motion ──────────────────────────────────────────────────
+       One number moves the carousel: pos, the fractional index under the
+       centre. Each card's pose is a continuous function of q = its index
+       minus pos (cards.css § "one continuous position"), and so is its
+       stacking order, written here on the same frame: the card nearer the
+       centre is in front, so two cards swap only where their |q| cross, the
+       exact midpoint of a slide, and never at the release.
+       The finger sets pos directly (1:1); every other move -- release,
+       arrows, pager, keys -- is a spring from the current pos AND speed, run
+       by rAF. Nothing restarts from a stored value, so there is no jump at
+       release, and a finger that lands mid-glide catches the cards where
+       they are. Reduced motion: the drag still follows the finger, every
+       other move is instant. */
+    var pos = active, vel = 0, target = active, raf = 0, last = 0;
+    var shown = [];
+    /* Stiffness 300, damping 32, mass 1: damping ratio .92, so a glide lands
+       without a visible bounce in about 350 ms; a flick's speed carries in. */
+    var K = 300, C = 32;
+    var reduce = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+
+    function pose() {
       cards.forEach(function (c, i) {
-        var pos = Math.max(-2, Math.min(2, Math.round(i - active - shift)));
-        c.card.setAttribute('data-pos', String(pos));
+        var q = Math.round(Math.max(-2, Math.min(2, i - pos)) * 10000) / 10000;
+        if (shown[i] === q) return;
+        shown[i] = q;
+        c.card.style.setProperty('--q', String(q));
+        c.card.style.zIndex = String(Math.round(3000 - Math.abs(q) * 1000));
       });
+    }
+
+    /* A layer per moving card, only while something moves (a permanent one
+       would leave the centre card's text resampled), and only for the cards
+       the move can show: 9 rasterised at once cost the first frames of a
+       drag on iOS. */
+    function lift(on) {
+      if (on) stage.classList.add('is-lift');
+      else stage.classList.remove('is-lift');
+      var lo = Math.min(pos, target) - 2.5, hi = Math.max(pos, target) + 2.5;
+      cards.forEach(function (c, i) {
+        c.card.style.willChange = on && i > lo && i < hi ? 'transform, opacity' : '';
+      });
+    }
+
+    function stop() {
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+    }
+
+    function tick(now) {
+      /* Fixed 4 ms sub-steps: stable at any frame rate, and the first frame
+         moves (a 0 dt there would hold the cards still for a frame). */
+      var dt = last ? Math.min(0.064, Math.max(0, now - last) / 1000) : 1 / 60;
+      last = now;
+      for (var h = dt; h > 1e-6; h -= 0.004) {
+        var s = Math.min(0.004, h);
+        vel += (-K * (pos - target) - C * vel) * s;
+        pos += vel * s;
+      }
+      if (Math.abs(pos - target) < 0.002 && Math.abs(vel) < 0.05) {
+        pos = target; vel = 0; raf = 0;
+        pose();
+        lift(false);
+        return;
+      }
+      pose();
+      raf = requestAnimationFrame(tick);
+    }
+
+    function glide() {
+      if (reduce.matches) {
+        stop(); pos = target; vel = 0;
+        pose(); lift(false);
+        return;
+      }
+      lift(true);
+      if (!raf) { last = 0; raf = requestAnimationFrame(tick); }
     }
 
     function place() {
@@ -315,12 +385,11 @@
          and the next arrow press would do nothing. Note it here, move it to
          the new centre card below. Focus outside the cards stays put. */
       var hadFocus = cards.some(function (c) { return c.card.contains(document.activeElement); });
-      stack(0);
       cards.forEach(function (c, i) {
-        var pos = i - active;
-        /* --p drives the pose (cards.css). */
-        c.card.style.setProperty('--p', String(pos));
-        var off = pos !== 0;
+        var off = i !== active;
+        /* data-pos names the card's slot after the move (-2..2); the pose
+           and the stacking come from pose(), not from this. */
+        c.card.setAttribute('data-pos', String(Math.max(-2, Math.min(2, i - active))));
         c.card.inert = off;
         if (off) c.card.setAttribute('aria-hidden', 'true');
         else c.card.removeAttribute('aria-hidden');
@@ -334,17 +403,24 @@
       next.setAttribute('aria-disabled', String(active === cards.length - 1));
       if (hadFocus) {
         var cur = cards[active];
-        var target = cur.info || cur.card;
-        if (target === cur.card) target.setAttribute('tabindex', '-1');
-        target.focus({ preventScroll: true });
+        var focusEl = cur.info || cur.card;
+        if (focusEl === cur.card) focusEl.setAttribute('tabindex', '-1');
+        focusEl.focus({ preventScroll: true });
       }
+    }
+
+    /* Commit to a card: state at once, motion by the spring. */
+    function moveTo(to) {
+      to = Math.max(0, Math.min(cards.length - 1, to));
+      target = to;
+      if (to !== active) { active = to; place(); }
+      glide();
     }
 
     function go(step) {
       var to = Math.max(0, Math.min(cards.length - 1, active + step));
       if (to === active) return;
-      active = to;
-      place();
+      moveTo(to);
     }
 
     prev.addEventListener('click', function () { go(-1); });
@@ -355,108 +431,89 @@
       else if (e.key === 'ArrowRight') { go(1); e.preventDefault(); }
     });
 
-    /* Swipe: the cards follow the finger, then snap. --drag on each card is
-       the travel in neighbour steps (px / --nb-x); cards.css adds it to each
-       card's --p. On release it rounds to the nearest card, and a quick flick
-       (over 0.3 px/ms) moves one card even when the travel is short.
-       Past either end the drag gives a third as much, a rubber band.
+    /* Swipe: pos follows the finger, px / --nb-x per card, from wherever the
+       cards were when it landed (a finger that lands mid-glide stops it).
+       Past either end the drag gives a third as much, a rubber band. On
+       release the nearest card wins; a flick (over 0.3 px/ms over the last
+       100 ms) goes on to the next card in its direction even when the travel
+       is short, and its speed is handed to the spring.
        The drag only starts once the move is clearly sideways (8px, more x
-       than y); until then a tap is a tap and the buttons inside get their
-       click. touch-action: pan-y in cards.css leaves vertical scrolling to
-       the page. A move that goes vertical first drops the drag, so the page
-       scrolls and the cards stay. A sideways one keeps the page still: the
-       touchmove listener below cancels the scroll (iOS Safari otherwise
-       takes a slightly diagonal swipe as a page pull, rubber-bands at the
-       top and cancels the pointer mid-drag). A pointercancel that still
-       comes ends the drag like a release, so the card it reached stays.
-       Mouse uses the arrows. */
+       than y); until then a tap is a tap, the buttons inside get their click
+       and no layer is made. touch-action: pan-y in cards.css leaves vertical
+       scrolling to the page. A move that goes vertical first drops the drag,
+       so the page scrolls and the cards stay. A sideways one keeps the page
+       still: the touchmove listener below cancels the scroll (iOS Safari
+       otherwise takes a slightly diagonal swipe as a page pull, rubber-bands
+       at the top and cancels the pointer mid-drag). A pointercancel that
+       still comes ends the drag like a release, so the card it reached
+       stays. Mouse uses the arrows. */
     var drag = null;
-    var liftTimer = 0;
-    /* --drag goes on each card, not the stage: with @property (cards.css) it
-       does not inherit, so a move restyles 9 cards, not every node in them. */
-    function setDrag(v) {
-      cards.forEach(function (c) {
-        if (v === null) c.card.style.removeProperty('--drag');
-        else c.card.style.setProperty('--drag', v);
-      });
-    }
-    function lift(on, ms) {
-      clearTimeout(liftTimer);
-      if (on) { stage.classList.add('is-lift'); return; }
-      /* will-change stays for the release slide, then goes so the centre
-         card's text is not left resampled on a layer. */
-      liftTimer = setTimeout(function () {
-        stage.classList.remove('is-lift');
-        stage.style.removeProperty('--slide');
-      }, ms + 60);
-    }
     stage.addEventListener('pointerdown', function (e) {
       if (e.pointerType === 'mouse' || drag) return;
-      clearTimeout(liftTimer);
-      stage.style.removeProperty('--slide');
-      lift(true);
-      drag = { id: e.pointerId, x0: e.clientX, y0: e.clientY, on: false,
+      stop();
+      vel = 0;
+      drag = { id: e.pointerId, x0: e.clientX, y0: e.clientY, on: false, p0: pos,
                step: parseFloat(getComputedStyle(root).getPropertyValue('--nb-x')) || 1,
-               t: e.timeStamp, x: e.clientX, v: 0, s: [[e.timeStamp, e.clientX]] };
+               s: [[e.timeStamp, e.clientX]] };
     });
+    /* A gesture that ends without dragging lets a caught glide finish. */
+    function resume() { if (pos !== target) glide(); }
     stage.addEventListener('pointermove', function (e) {
       if (!drag || e.pointerId !== drag.id) return;
       var dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
       if (!drag.on) {
-        if (Math.abs(dy) > 8 && Math.abs(dy) >= Math.abs(dx)) { drag = null; lift(false, 0); return; }
+        if (Math.abs(dy) > 8 && Math.abs(dy) >= Math.abs(dx)) { drag = null; resume(); return; }
         if (Math.abs(dx) < 8) return;
         drag.on = true;
         /* From here the gesture is the carousel's: capture keeps the moves
            coming outside the stage, and the click after release lands on
-           the stage instead of on a button under the finger. */
+           the stage instead of on a button under the finger. The cards
+           start from here, not from where the finger landed: counting the
+           8px it took to decide would jump them 8px in one frame. */
+        drag.x0 = e.clientX;
+        dx = 0;
         stage.setPointerCapture(e.pointerId);
-        stage.classList.add('is-dragging');
+        lift(true);
       }
-      /* Velocity over the last ~100 ms of moves, not the last frame's jitter. */
-      drag.t = e.timeStamp; drag.x = e.clientX;
       drag.s.push([e.timeStamp, e.clientX]);
       while (drag.s.length > 2 && e.timeStamp - drag.s[0][0] > 100) drag.s.shift();
       /* clientX is in screen px; under the wide-screen zoom a CSS px is
          currentCSSZoom of them. */
-      var f = -dx / (drag.step * (root.currentCSSZoom || 1));
-      var lo = -active, hi = cards.length - 1 - active;
-      if (f < lo) f = lo + (f - lo) / 3;
-      else if (f > hi) f = hi + (f - hi) / 3;
-      drag.f = f;
-      setDrag(String(-f));
-      stack(f);
+      var p = drag.p0 - dx / (drag.step * (root.currentCSSZoom || 1));
+      var lo = 0, hi = cards.length - 1;
+      if (p < lo) p = lo + (p - lo) / 3;
+      else if (p > hi) p = hi + (p - hi) / 3;
+      pos = p;
+      pose();
     });
     function release(e) {
       if (!drag || e.pointerId !== drag.id) return;
       var d = drag;
       drag = null;
-      if (!d.on) { lift(false, 0); return; }
-      var steps = Math.round(d.f || 0);
-      /* Flick speed (px/ms) over the last 100 ms; stale if the finger rested
-         before lifting. */
+      if (!d.on) { resume(); return; }
+      /* Finger speed (px/ms) over the last 100 ms; stale if the finger
+         rested before lifting. */
       var a = d.s[0], b = d.s[d.s.length - 1], v = 0;
       if (e.timeStamp - b[0] < 100 && b[0] > a[0]) v = (b[1] - a[1]) / (b[0] - a[0]);
-      var fast = Math.abs(v) > 0.3;
+      /* The same speed in cards per second, the spring's unit. */
+      var cps = -v * 1000 / (d.step * (root.currentCSSZoom || 1));
+      var from = Math.round(d.p0), to = Math.round(pos);
       /* A flick moves one card even when the travel is short, and wins over
          a rounding that would send the cards back. */
-      if (fast && (steps === 0 || (steps < 0) !== (v > 0))) steps = v < 0 ? 1 : -1;
-      /* A fast release should not brake: shorten the slide with the speed
-         (340 ms at 0.3 px/ms down to 180 ms at 1.5 px/ms and up). */
-      var ms = 0;
-      if (fast) {
-        ms = Math.round(Math.max(180, Math.min(340, 340 - (Math.abs(v) - 0.3) * 133)));
-        stage.style.setProperty('--slide', ms + 'ms');
+      if (Math.abs(v) > 0.3 && (to === from || (to > from) !== (cps > 0))) {
+        to = from + (cps > 0 ? 1 : -1);
       }
-      /* Same frame: the transition comes back and --drag goes to 0 while --p
-         moves, so each card animates from where the finger left it. */
-      stage.classList.remove('is-dragging');
-      setDrag(null);
+      to = Math.max(0, Math.min(cards.length - 1, to));
+      /* Hand the speed to the spring: up to 6 cards/s toward the card it
+         lands on; when the finger overshot and the card lies behind, only
+         2 cards/s carry on, so the cards ease out of the motion and back
+         (a few px) instead of either stopping dead or swinging past the
+         midpoint, where the stacking order would flip twice. */
+      vel = (to - pos) * cps >= 0 ? Math.max(-6, Math.min(6, cps)) : Math.max(-2, Math.min(2, cps));
       /* pointerup, pointercancel or lost capture all commit: a cancel (the
          browser took the gesture) must not throw back a card the finger
          already brought past halfway. */
-      go(steps);
-      stack(0);   // go() returns early at an end or on 0 steps
-      lift(false, ms || 340);
+      moveTo(to);
     }
     stage.addEventListener('pointerup', release);
     stage.addEventListener('pointercancel', release);
@@ -481,6 +538,7 @@
 
     render();
     place();
+    pose();
     TW.on('lang', render);
   });
 
