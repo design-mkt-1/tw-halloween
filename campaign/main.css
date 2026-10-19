@@ -336,9 +336,10 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
 
   .cmp-hero > .cmp-cards { grid-column: 2; grid-row: 1; }
 
-  /* 21:537: 1280 wide, title 28px, 40px down to the steps, the footer
-     starting 141px under them. Vertical dividers at the column gaps. */
-  .cmp-how { padding: 0 max(80px, calc((100% - 1280px) / 2)) 141px; }
+  /* 21:537: 1280 wide, title 28px, 40px down to the steps; the footer
+     starts right under them (21:548 y 851 = 21:537 bottom; its own 48px
+     top padding is the whole gap). Vertical dividers at the column gaps. */
+  .cmp-how { padding: 0 max(80px, calc((100% - 1280px) / 2)); }
 
   .cmp-how__title { margin-bottom: 40px; padding: 0; font-size: 28px; }
 
