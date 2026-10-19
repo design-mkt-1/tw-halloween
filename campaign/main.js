@@ -363,7 +363,13 @@
        The drag only starts once the move is clearly sideways (8px, more x
        than y); until then a tap is a tap and the buttons inside get their
        click. touch-action: pan-y in cards.css leaves vertical scrolling to
-       the page, which then sends pointercancel. Mouse uses the arrows. */
+       the page. A move that goes vertical first drops the drag, so the page
+       scrolls and the cards stay. A sideways one keeps the page still: the
+       touchmove listener below cancels the scroll (iOS Safari otherwise
+       takes a slightly diagonal swipe as a page pull, rubber-bands at the
+       top and cancels the pointer mid-drag). A pointercancel that still
+       comes ends the drag like a release, so the card it reached stays.
+       Mouse uses the arrows. */
     var drag = null;
     var liftTimer = 0;
     /* --drag goes on each card, not the stage: with @property (cards.css) it
@@ -433,7 +439,7 @@
       var fast = Math.abs(v) > 0.3;
       /* A flick moves one card even when the travel is short, and wins over
          a rounding that would send the cards back. */
-      if (fast && e.type === 'pointerup' && (steps === 0 || (steps < 0) !== (v > 0))) steps = v < 0 ? 1 : -1;
+      if (fast && (steps === 0 || (steps < 0) !== (v > 0))) steps = v < 0 ? 1 : -1;
       /* A fast release should not brake: shorten the slide with the speed
          (340 ms at 0.3 px/ms down to 180 ms at 1.5 px/ms and up). */
       var ms = 0;
@@ -445,12 +451,33 @@
          moves, so each card animates from where the finger left it. */
       stage.classList.remove('is-dragging');
       setDrag(null);
-      if (e.type === 'pointerup') go(steps);
+      /* pointerup, pointercancel or lost capture all commit: a cancel (the
+         browser took the gesture) must not throw back a card the finger
+         already brought past halfway. */
+      go(steps);
       stack(0);   // go() returns early at an end or on 0 steps
       lift(false, ms || 340);
     }
     stage.addEventListener('pointerup', release);
     stage.addEventListener('pointercancel', release);
+    /* Only the stage's own capture: lostpointercapture bubbles, and the
+       implicit touch capture on the card under the finger is lost (and
+       bubbles here) the moment the stage takes the pointer. */
+    stage.addEventListener('lostpointercapture', function (e) {
+      if (e.target === stage) release(e);
+    });
+    /* Pointer events cannot stop a page scroll and touch-action cannot change
+       mid-gesture; a non-passive touchmove can. Cancel it while the drag is
+       on, and before the 8px decision while the move leans sideways, so iOS
+       never starts a vertical pan under a sideways swipe. A move that leans
+       vertical is left alone; pointermove then drops the drag (drag = null)
+       and the page scrolls. touchstart/touchend are never cancelled, so taps
+       still click. */
+    stage.addEventListener('touchmove', function (e) {
+      if (!drag || !e.cancelable) return;
+      var t = e.touches[0];
+      if (drag.on || Math.abs(t.clientX - drag.x0) > Math.abs(t.clientY - drag.y0)) e.preventDefault();
+    }, { passive: false });
 
     render();
     place();
