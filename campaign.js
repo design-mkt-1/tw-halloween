@@ -125,6 +125,7 @@ window.TW_CAMPAIGN = {
        the link, never on the page. */
     'cta:2026-10-23': 'https://twredirect.com/?modal=deposit&promocode=SCARY100',
     'cta:2026-10-26': 'https://twredirect.com/?modal=deposit&promocode=PUMPKIN30',
+    'cta:2026-10-29': 'https://twredirect.com/?modal=deposit&promocode=GHOST30',
     'cta:2026-10-31': 'https://twredirect.com/?modal=deposit&promocode=HALLOWEEN100'
   },
 
