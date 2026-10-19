@@ -329,18 +329,19 @@
 .cmp-card--past .cmp-card__amount { color: var(--cmp-grey-ink); }
 
 /* Info is not in Figma (the card has no terms there) but it is the way to
-   the terms, and step 1 of "How does it work?" names it. It sat on the
-   ball's top-right; it now stands under the left end of the date pill, in
-   the card's empty top-left corner: at that height the ball's edge is 8px
-   to its right (measured off the ball's alpha, ball-orange-884), and the
-   offer lines below never reach it, however they wrap. The pseudo-element
-   makes the touch target at least 44x44 without moving anything. */
+   the terms, and step 1 of "How does it work?" names it. It stands at the
+   top right, under the date pill (4px below it), where the card is empty
+   to the right of the ball. The ball's top-right curve is what limits it:
+   in the compact bands the pill is narrow (padding 4-6px) so its bottom-left
+   corner stays 4px+ off the ball's alpha edge (measured, ball-orange-884);
+   the offer lines below never reach it. The pseudo-element makes the touch
+   target at least 44x44 without moving anything. */
 .cmp-card__info {
   position: absolute;
   z-index: 2;
   /* 4px under the date pill: its top, its one line and its padding. The
      compact values (a smaller card) come from § the bands. */
-  left: var(--info-x, 8px);
+  right: var(--info-x, 8px);
   top: calc(26px * var(--k) + var(--lbl-fs, 12px) * 1.25 + 13.6px);
   min-width: var(--info-min, 52px);
   height: var(--info-h, 28px);
@@ -460,7 +461,7 @@
     --info-x: 4px;
     --info-min: 0px;
     --info-h: 26px;
-    --info-pad: 8px;
+    --info-pad: 6px;
     --info-fs: 13px;
   }
   /* The neighbours drop 85px in 21:606; the stage grows to keep them. */
@@ -546,7 +547,7 @@
     --info-x: 4px;
     --info-min: 0px;
     --info-h: 26px;
-    --info-pad: 8px;
+    --info-pad: 6px;
     --info-fs: 13px;
     margin-inline: 0;
   }
@@ -582,7 +583,8 @@
     --lbl-px: 10px;
     --lbl-over: 32px;      /* the Ukrainian label, one line on a 206px card */
     --info-x: 3px;
-    --info-pad: 7px;
+    --info-pad: 4px;
+    --info-fs: 12px;
   }
 }
 @media (hover: none) and (min-width: 560px) and (max-height: 500px) and (orientation: landscape) and (max-width: 1023.98px) {
