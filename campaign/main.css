@@ -132,8 +132,16 @@ body { background: var(--cmp-bg); }
   backdrop-filter: none;
 }
 
-/* 532x178 is the file; 159x53 is 21:617. */
-.tw-hdr__logo img { width: 159px; height: auto; aspect-ratio: 532 / 178; }
+/* The plain wordmark (Figma 35:832, 220.917x44 = 5.02:1). On a phone it is
+   the footer's size, 132x26; the link is a 44px-tall flex box so the tap
+   target stays 44 while the mark is smaller. */
+.tw-hdr__logo { display: flex; align-items: center; min-height: 44px; }
+.tw-hdr__logo img { display: block; width: 132px; height: auto; aspect-ratio: 220.917 / 44; }
+
+/* The sign-up card shows the same file; the shell's boxes (101x18, 247x44)
+   are not 5.02:1, so only the height is fixed. */
+.tw-promo__logo { width: auto; height: 18px; }
+@media (min-width: 560px) { .tw-promo__logo { width: auto; height: 44px; } }
 
 /* The language trigger as Figma draws it (21:618): the current flag in a
    blue ring, 40px on a phone. The button itself stays 44px for the tap
@@ -298,9 +306,9 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
 
 /* ══ footer ═══════════════════════════════════════════════════
    The shell's footer on the page's own ground (21:548 / 21:598), with
-   Figma's spacing. The header now carries the Halloween logo through
-   brand.logo, so the footer's copy of it is hidden and the plain wordmark
-   Figma draws there (21:550) is painted in its place. */
+   Figma's spacing. The header, the footer and the card all use the plain wordmark through
+   brand.logo; the footer keeps its own painted copy (21:550), the same
+   vectors, so the shell's img stays hidden. */
 
 .tw-ftr {
   gap: 32px;
@@ -334,7 +342,7 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
 @media (min-width: 600px) and (max-width: 1023.98px) and (orientation: portrait),
        (min-width: 600px) and (max-width: 1023.98px) and (min-height: 500.02px) {
 
-  .tw-hdr__logo img { width: 199px; }
+  .tw-hdr__logo img { width: 160px; }
 
   .cmp-hero { min-height: 875px; padding-top: 77.5px; }
 
@@ -373,9 +381,11 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
   }
 
   .tw-hdr__logo {
-    --logo-w: clamp(150px, 18.47vw, 266px);
+    --logo-w: clamp(125px, 15.34vw, 221px);
     grid-column: 2;
     justify-self: start;
+    /* Figma 35:832: 62px down at 1440 (the header pads 39). */
+    margin-top: calc(min(4.306vw, 62px) - min(2.708vw, 39px));
     /* The box is min(754px, column 2); written in vw, not %, because
        WebKit's zoom (above 1440) applies twice to a % inside calc() here. */
     margin-left: calc((min(754px, (100vw - 2 * min(5.556vw, 80px)) * 777 / 1280) - var(--logo-w)) / 2);
@@ -451,7 +461,7 @@ html[lang="en"] { --cmp-flag: url("../assets/img/icons/flag-gb.svg"); }
   .cmp-hero { padding-top: 56px; padding-right: max(16px, env(safe-area-inset-right)); background: var(--cmp-bg); }
   .cmp-hero__art { top: 0; bottom: auto; }
   .cmp-how__steps { max-width: 720px; margin-inline: auto; }
-  .tw-hdr__logo { --logo-w: 120px; grid-column: 1; margin-left: 0; }
+  .tw-hdr__logo { --logo-w: 120px; grid-column: 1; margin-left: 0; margin-top: 0; }
 }
 
 /* ══ How it works, wide ════════════════════════════════════════

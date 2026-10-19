@@ -256,11 +256,10 @@ window.TW_CAMPAIGN = {
      campaign occasionally needs one of them: header.mute should be false for
      a campaign with no audio, so the bar does not render a dead speaker. */
   brand: {
-    /* The Halloween lockup (pumpkin TOPWIN, Figma 21:643). A raster in the
-       design, so a WebP here; assets/img/logo-topwin.svg stays the brand's.
-       campaign/main.css sizes it in the header and swaps the plain wordmark
-       back into the footer, as Figma draws it. */
-    logo:       'campaign/assets/page/logo-halloween-532.webp',
+    /* The plain TOP WIN wordmark, Figma 35:832 ("Desktop - new logo"):
+       real vectors, 220.917x44. The header, the footer and the sign-up
+       card all use it; assets/img/logo-topwin.svg stays the brand's. */
+    logo:       'campaign/assets/page/logo-topwin.svg',
     logoAlt:    'Top Win',
     themeColor: '#040412',                    // --navy-950
     payments:   ['visa', 'mastercard', 'tether', 'bitcoin']
