@@ -109,26 +109,26 @@ loaded by `index.html`). It needs its own id before it goes live:
    silently sends registrations to another landing, and the only symptom is
    wrong statistics. Nothing on screen says so.
 4. **Test on localhost.** On `localhost`, `127.0.0.1` or `https://land-crm…` the
-   page uses `campaign.js` → `platform.dev`, IT's dev landing 8, not your id.
+   page uses `campaign.js` → `platform.dev` once IT issues a TopWin dev
+   landing; it ships empty, so until then localhost runs the demo path.
    Run `python tools/platform_test.py`; it is stubbed and sends no request.
    On localhost a real submit gets as far as IT and then fails with
    "reCAPTCHA verification failed" (422). That is expected: see traps.md, "A
    real registration from localhost fails on reCAPTCHA". Prove a real
    registration on `landings.top-win.promo` with your own id before go-live.
 5. **Before go-live**, check each of these:
-   - the production API is in the CSP `connect-src` (it is, in `index.html`);
+   - `index.html` has no Content-Security-Policy `<meta>` (IT's template has
+     none; owner, 2026-11-11) -- do not add one back;
    - a reCAPTCHA v3 key for the live domain is registered with Google; the page
      uses the `recaptcha_key` that IT's landing response returns;
    - CORS on IT's landing and registration endpoints allows the live domain;
    - the live URL's browser console shows no `[platform] config.json not found`
-     line and no CSP refusal.
+     line.
 
-Not needed, but possible: a CSP `form-action` for the SSO origin. It is absent,
-so the `/api/welcome` POST is not restricted. If IT adds one, it must allow the
-origin of the `redirectUrl` in the registration response (for TopWin, the
-tracker mirror, not the casino), and the origin of the landing's `rules` URL
-only if a response can come back without `redirectUrl`. README-IT section 3
-says the same.
+The connection is IT's template, step for step (decision "Platform connection
+= IT's template"): body, headers, request order and `language` (`ua` / `ru` /
+`en`). Do not change `js/platform.js` in a campaign; a deviation needs the
+owner's and IT's OK. The SSO hand-off is pending IT's answer.
 
 ---
 
@@ -173,12 +173,9 @@ Never ship the Figma PNG.
 ## 7. Only if you set analytics.metaPixelId
 
 GA, GTM and Yandex come from the landing response, through `js/platform.js`,
-and need no edit. Meta's origins are not in the CSP. Adding `metaPixelId` means
-hand-editing the CSP `<meta>` in `index.html` to allow the origins that
-`js/shell.js § injectAnalytics` loads. This is the one campaign edit that
-cannot live in `campaign.js`: a meta policy cannot be written from JavaScript,
-and a CSP refusal appears only in the console. The page looks fine and silently
-sends nothing.
+and need no edit. `index.html` has no CSP (IT's template has none), so
+`metaPixelId` needs no other edit either; check the console that IT does not
+already load the same tag.
 
 ---
 

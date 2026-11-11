@@ -166,9 +166,9 @@ the platform has no other source, and there `terms` and `privacy` block
 go-live: the page collects an 18+ consent, and dead consent links on a
 gambling registration form are a compliance problem, not a cosmetic one.
 
-Setting an analytics id also needs the CSP `<meta>` in `index.html` swapped for
-the commented one — a meta policy cannot be written from JavaScript. A CSP
-refusal appears only in the console; the page looks fine and sends nothing.
+`index.html` has no Content-Security-Policy: IT's template has none, and the
+platform connection is IT's (owner, 2026-11-11). Setting an analytics id needs
+no other edit.
 
 ---
 
