@@ -205,12 +205,16 @@ window.TW_CAMPAIGN = {
      confirmation screen and logs a warning to the console. Nothing on screen
      says so, which is why the first deploy must be checked in the console.
 
-     `dev` is IT's own TEMP_CONFIG, copied from their landing
-     (_js/enums/enums.js). It is used ONLY on localhost, 127.0.0.1 or an origin
-     starting with https://land-crm, so a developer can try the page before
-     IT issues a landing_id. It never reaches a visitor on the live domain.
+     `dev` is for a TopWin development landing, which IT has not issued yet.
+     Ask IT for its id and its two URLs and fill all three in. It is used
+     ONLY on localhost, 127.0.0.1 or an origin starting with https://land-crm,
+     and only when all three are set. While they are empty, localhost runs
+     the demo path (no request) and land-crm reads config.json. Never put
+     another brand's landing here (topwin-lp skill, decision 21).
 
-     supportEmail is shown on the "unavailable" card; IT hardcodes it.
+     supportEmail is shown on the "unavailable" card. TopWin's address is
+     not known yet (IT gives it). While it is empty the card shows no address
+     and uses pl.off.textNoMail, a sentence without "write to us".
 
      configUrl on GitHub Pages: the Pages deploy publishes an allowlist
      (.github/workflows/pages.yml) that never includes a config.json, so
@@ -221,11 +225,11 @@ window.TW_CAMPAIGN = {
      IT's servers, where config.json is written, nothing changes. */
   platform: {
     configUrl:    /\.github\.io$/.test(location.hostname) ? 'campaign/no-platform.json' : 'config.json',
-    supportEmail: 'support@jack-pot.com',
+    supportEmail: '',
     dev: {
-      id: 8,
-      email_registration: 'https://api2-land-dev.jack-pot.tech/api/jp/registration/email',
-      landing:            'https://api2-land-dev.jack-pot.tech/api/jp/landing/8'
+      id: null,
+      email_registration: '',
+      landing:            ''
     }
   },
 
@@ -342,6 +346,7 @@ window.TW_CAMPAIGN = {
       'how.3.text':  'Після завершення депозиту бонус буде зараховано на ваш акаунт. Рекомендуємо спочатку використати бонусні кошти, а потім перейти до Free Bets.',
       'pl.off.title':   'Сторінка тимчасово недоступна',
       'pl.off.text':    'Реєстрація зараз закрита. Спробуйте пізніше або напишіть нам:',
+      'pl.off.textNoMail': 'Реєстрація зараз закрита. Спробуйте пізніше.',
       'err.exists':     'Цей email уже зареєстровано. Увійдіть в акаунт',
       'err.recaptcha':  'Не вдалося пройти перевірку безпеки. Спробуйте ще раз'
     },
@@ -388,6 +393,7 @@ window.TW_CAMPAIGN = {
       'how.3.text':  'После завершения депозита бонус будет зачислен на ваш аккаунт. Рекомендуем сначала использовать бонусные средства, а затем перейти к Free Bets.',
       'pl.off.title':   'Страница временно недоступна',
       'pl.off.text':    'Регистрация сейчас закрыта. Попробуйте позже или напишите нам:',
+      'pl.off.textNoMail': 'Регистрация сейчас закрыта. Попробуйте позже.',
       'err.exists':     'Этот email уже зарегистрирован. Войдите в аккаунт',
       'err.recaptcha':  'Не удалось пройти проверку безопасности. Попробуйте ещё раз'
     },
@@ -434,6 +440,7 @@ window.TW_CAMPAIGN = {
       'how.3.text':  'Once the deposit is completed, the bonuses will be credited to your account. We recommend using the bonus funds first and then moving on to Free Bets.',
       'pl.off.title':   'This page is temporarily unavailable',
       'pl.off.text':    'Registration is closed right now. Please try again later or write to us:',
+      'pl.off.textNoMail': 'Registration is closed right now. Please try again later.',
       'err.exists':     'This email is already registered. Please log in',
       'err.recaptcha':  'The security check failed. Please try again'
     }
